@@ -34,3 +34,7 @@
 "Full screen %@" = "全屏 %@";
 "Current" = "当前";
 "Current desktop" = "当前桌面";
+"App launcher" = "应用启动器";
+"Search apps" = "搜索应用";
+"No matching apps" = "没有匹配的应用";
+"%@ apps" = "%@ 个应用";

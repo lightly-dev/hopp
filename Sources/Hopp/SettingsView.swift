@@ -7,6 +7,7 @@ final class AppSettings: ObservableObject {
     @Published private(set) var language: AppLanguage
     @Published private(set) var allWindowsShortcut: KeyboardShortcut
     @Published private(set) var currentAppShortcut: KeyboardShortcut
+    @Published private(set) var launcherShortcut: KeyboardShortcut
     @Published private(set) var showWindowsFromAllDesktops: Bool
 
     private let defaults: UserDefaults
@@ -22,9 +23,11 @@ final class AppSettings: ObservableObject {
         }
         let allWindows = loadShortcut("allWindowsShortcut", fallback: .allWindows)
         let currentApp = loadShortcut("currentAppShortcut", fallback: .currentApp)
-        let conflict = allWindows.conflicts(with: currentApp)
+        let launcher = loadShortcut("launcherShortcut", fallback: .launcher)
+        let conflict = KeyboardShortcut.haveConflicts([allWindows, currentApp, launcher])
         allWindowsShortcut = conflict ? .allWindows : allWindows
         currentAppShortcut = conflict ? .currentApp : currentApp
+        launcherShortcut = conflict ? .launcher : launcher
         language = AppLanguage(rawValue: defaults.string(forKey: "language") ?? "") ?? .system
     }
 
@@ -46,6 +49,7 @@ final class AppSettings: ObservableObject {
         switch target {
         case .allWindows: allWindowsShortcut = shortcut
         case .currentApp: currentAppShortcut = shortcut
+        case .launcher: launcherShortcut = shortcut
         }
         defaults.set(data, forKey: target.rawValue + "Shortcut")
         return true
@@ -55,14 +59,15 @@ final class AppSettings: ObservableObject {
         switch target {
         case .allWindows: allWindowsShortcut
         case .currentApp: currentAppShortcut
+        case .launcher: launcherShortcut
         }
     }
 
     func resetShortcuts() {
         allWindowsShortcut = .allWindows
         currentAppShortcut = .currentApp
-        defaults.removeObject(forKey: "allWindowsShortcut")
-        defaults.removeObject(forKey: "currentAppShortcut")
+        launcherShortcut = .launcher
+        ShortcutTarget.allCases.forEach { defaults.removeObject(forKey: $0.rawValue + "Shortcut") }
     }
 
     static func selfCheck() -> Bool {
@@ -89,7 +94,11 @@ final class AppSettings: ObservableObject {
               !settings.setShortcut(custom, target: .currentApp),
               settings.setShortcut(KeyboardShortcut(keyCode: 16, modifiers: .maskCommand, keyLabel: "Y"),
                                    target: .currentApp),
-              AppSettings(defaults: defaults).currentAppShortcut.keyCode == 16 else { return false }
+              AppSettings(defaults: defaults).currentAppShortcut.keyCode == 16,
+              settings.launcherShortcut == .launcher,
+              !settings.setShortcut(custom, target: .launcher),
+              settings.setShortcut(KeyboardShortcut(keyCode: 0, modifiers: .maskAlternate, keyLabel: "A"), target: .launcher),
+              AppSettings(defaults: defaults).launcherShortcut.keyCode == 0 else { return false }
         // Corrupt or conflicting saved values fall back to the original shortcuts.
         defaults.set(try? JSONEncoder().encode(custom), forKey: "currentAppShortcut")
         guard AppSettings(defaults: defaults).allWindowsShortcut == .allWindows,
@@ -99,6 +108,7 @@ final class AppSettings: ObservableObject {
         settings.resetShortcuts()
         return AppSettings(defaults: defaults).allWindowsShortcut == .allWindows
             && AppSettings(defaults: defaults).currentAppShortcut == .currentApp
+            && AppSettings(defaults: defaults).launcherShortcut == .launcher
     }
 }
 

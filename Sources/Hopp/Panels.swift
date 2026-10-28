@@ -427,7 +427,7 @@ private final class SwitcherRow: NSButton {
 }
 
 @MainActor
-private final class FlippedStackView: NSStackView {
+final class FlippedStackView: NSStackView {
     override var isFlipped: Bool { true }
 }
 
@@ -571,7 +571,8 @@ enum PanelSmokeCheck {
         }
         switcher.hideSwitcher()
         switcher.close()
-        return valid ? true : fail("switcher layout mismatch: \(switcher.smokeLayoutDescription)")
+        guard valid else { return fail("switcher layout mismatch: \(switcher.smokeLayoutDescription)") }
+        return LauncherPanel.smokeCheck() ? true : fail("app launcher search, selection or launch mismatch")
     }
 
     private static func fail(_ message: String) -> Bool {

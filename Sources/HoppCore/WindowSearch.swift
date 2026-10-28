@@ -36,7 +36,7 @@ public enum WindowSearch {
         return Match(window: window, appRanges: appRanges, titleRanges: titleRanges, score: score)
     }
 
-    private static func matchText(_ text: String, token: String) -> (score: Int, ranges: [NSRange])? {
+    static func matchText(_ text: String, token: String) -> (score: Int, ranges: [NSRange])? {
         func isWordStart(_ index: String.Index) -> Bool {
             guard index != text.startIndex else { return true }
             let previous = text[text.index(before: index)]

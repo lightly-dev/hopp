@@ -34,3 +34,7 @@
 "Full screen %@" = "フルスクリーン %@";
 "Current" = "現在";
 "Current desktop" = "現在のデスクトップ";
+"App launcher" = "アプリランチャー";
+"Search apps" = "アプリを検索";
+"No matching apps" = "一致するアプリはありません";
+"%@ apps" = "%@ 個のアプリ";

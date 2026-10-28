@@ -34,3 +34,7 @@
 "Full screen %@" = "Pantalla completa %@";
 "Current" = "Actual";
 "Current desktop" = "Escritorio actual";
+"App launcher" = "Lanzador de apps";
+"Search apps" = "Buscar apps";
+"No matching apps" = "No hay apps coincidentes";
+"%@ apps" = "%@ apps";

@@ -1,6 +1,6 @@
 # Hopp
 
-Hopp is a keyboard-first window switcher for macOS. Press `⌘Tab` to see individual windows in most-recently-used order, type to search by app name or window title (pinyin works for Chinese names), and release the modifier to switch.
+Hopp is a keyboard-first window switcher and app launcher for macOS. Press `⌘Tab` to see individual windows in most-recently-used order, type to search by app name or window title (pinyin works for Chinese names), and release the modifier to switch. Press `⌥Space` to search installed apps and launch one.
 
 ## Features
 
@@ -11,6 +11,7 @@ Hopp is a keyboard-first window switcher for macOS. Press `⌘Tab` to see indivi
 | Search | Hold the modifier and type to filter by app name or window title, including pinyin for Chinese names; matches are highlighted |
 | All desktops | Settings → General → Show windows from all desktops groups the switcher by desktop |
 | Window activation | Restores minimized or hidden windows when activated |
+| App launcher | `⌥Space` (customizable) opens a search box for installed apps, including pinyin and English names of localized apps. `↑`/`↓` select, `↩` launches or brings a running app forward, `Esc` closes |
 
 ## Install and permissions
 

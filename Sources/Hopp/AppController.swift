@@ -9,6 +9,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private let windowService = WindowService()
     private let shortcuts = ShortcutController()
     private let settings = AppSettings()
+    private let appCatalog = AppCatalog()
+    private lazy var launcher = LauncherPanel(onLaunch: AppCatalog.launch, onDismiss: {})
 
     private var switchers: [CGDirectDisplayID: SwitcherPanel] = [:]
     private var cancellables: Set<AnyCancellable> = []
@@ -31,6 +33,11 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         rebuildPanels()
         windowService.setIncludeAllSpaces(settings.showWindowsFromAllDesktops)
         windowService.start()
+        appCatalog.onChange = { [weak self] in
+            guard let self else { return }
+            self.launcher.update(apps: self.appCatalog.apps)
+        }
+        appCatalog.refresh()
         if !windowService.hasAccessibility { showSettings() }
     }
 
@@ -41,7 +48,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func configureShortcuts() {
-        shortcuts.configure(allWindows: settings.allWindowsShortcut, currentApp: settings.currentAppShortcut)
+        shortcuts.configure(allWindows: settings.allWindowsShortcut, currentApp: settings.currentAppShortcut,
+                            launcher: settings.launcherShortcut)
         shortcuts.canBegin = { [weak self] currentAppOnly in
             self?.availableWindows(currentAppOnly: currentAppOnly).isEmpty == false
         }
@@ -64,7 +72,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 self?.configureMenuBar()
                 if let self {
                     self.shortcuts.configure(allWindows: self.settings.allWindowsShortcut,
-                                             currentApp: self.settings.currentAppShortcut)
+                                             currentApp: self.settings.currentAppShortcut,
+                                             launcher: self.settings.launcherShortcut)
                     self.windowService.setIncludeAllSpaces(self.settings.showWindowsFromAllDesktops)
                     self.settingsWindow?.title = L10n.text("Hopp Settings", language: self.settings.language)
                     if self.currentAppOnly != nil { self.refreshVisibleSwitcher() }
@@ -106,9 +115,16 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func handle(_ action: SwitcherAction) {
+        if action == .toggleLauncher {
+            toggleLauncher()
+            return
+        }
         windowService.cancelActivation()
         switch action {
+        case .toggleLauncher:
+            break
         case let .begin(currentAppOnly, reverse):
+            launcher.dismiss()
             searchQuery = ""
             selectionBeforeSearch = nil
             self.currentAppOnly = currentAppOnly
@@ -151,6 +167,15 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
             finishSwitcher(activating: id)
         case .cancel:
             finishSwitcher(activating: nil)
+        }
+    }
+
+    @objc private func toggleLauncher() {
+        if launcher.isVisible {
+            launcher.dismiss()
+        } else {
+            appCatalog.refresh()
+            launcher.show(apps: appCatalog.apps, language: settings.language)
         }
     }
 
@@ -206,6 +231,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         item.button?.image = image
         item.button?.setAccessibilityLabel("Hopp")
         let menu = NSMenu()
+        menu.addItem(withTitle: L10n.text("App launcher", language: settings.language), action: #selector(toggleLauncher), keyEquivalent: "").target = self
         menu.addItem(withTitle: L10n.text("Settings…", language: settings.language), action: #selector(showSettings), keyEquivalent: ",").target = self
         menu.addItem(withTitle: L10n.text("Grant Accessibility Access…", language: settings.language), action: #selector(requestAccessibility), keyEquivalent: "")
             .target = self

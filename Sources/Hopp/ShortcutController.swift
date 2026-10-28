@@ -6,6 +6,7 @@ struct KeyboardShortcut: Codable, Equatable {
     static let modifierMask: CGEventFlags = [.maskCommand, .maskControl, .maskAlternate]
     static let allWindows = KeyboardShortcut(keyCode: 48, modifiers: .maskCommand, keyLabel: "Tab")
     static let currentApp = KeyboardShortcut(keyCode: 50, modifiers: .maskCommand, keyLabel: "`")
+    static let launcher = KeyboardShortcut(keyCode: 49, modifiers: .maskAlternate, keyLabel: "Space")
 
     let keyCode: UInt16
     let modifierRawValue: UInt64
@@ -37,6 +38,12 @@ struct KeyboardShortcut: Codable, Equatable {
         keyCode == other.keyCode && modifierRawValue == other.modifierRawValue
     }
 
+    static func haveConflicts(_ shortcuts: [KeyboardShortcut]) -> Bool {
+        shortcuts.indices.contains { index in
+            shortcuts[(index + 1)...].contains { shortcuts[index].conflicts(with: $0) }
+        }
+    }
+
     init?(event: NSEvent) {
         let flags = CGEventFlags(rawValue: UInt64(event.modifierFlags.rawValue))
         guard !flags.contains(.maskShift) else { return nil }
@@ -56,12 +63,13 @@ struct KeyboardShortcut: Codable, Equatable {
 }
 
 enum ShortcutTarget: String, CaseIterable {
-    case allWindows, currentApp
+    case allWindows, currentApp, launcher
 
     var title: String {
         switch self {
         case .allWindows: "All windows"
         case .currentApp: "Current app windows"
+        case .launcher: "App launcher"
         }
     }
 }
@@ -72,6 +80,7 @@ enum SwitcherAction: Equatable {
     case search(String)
     case commit
     case cancel
+    case toggleLauncher
 }
 
 private struct ShortcutState {
@@ -123,6 +132,7 @@ final class ShortcutController: ObservableObject {
     var canBegin: ((Bool) -> Bool)?
     private(set) var allWindowsShortcut = KeyboardShortcut.allWindows
     private(set) var currentAppShortcut = KeyboardShortcut.currentApp
+    private(set) var launcherShortcut = KeyboardShortcut.launcher
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -131,12 +141,14 @@ final class ShortcutController: ObservableObject {
     private var recordingMonitor: Any?
     private var saveRecording: ((KeyboardShortcut) -> Bool)?
 
-    func configure(allWindows: KeyboardShortcut, currentApp: KeyboardShortcut) {
-        guard allWindows.isValid, currentApp.isValid, !allWindows.conflicts(with: currentApp),
-              allWindows != allWindowsShortcut || currentApp != currentAppShortcut else { return }
+    func configure(allWindows: KeyboardShortcut, currentApp: KeyboardShortcut, launcher: KeyboardShortcut = .launcher) {
+        let shortcuts = [allWindows, currentApp, launcher]
+        guard shortcuts.allSatisfy(\.isValid), !KeyboardShortcut.haveConflicts(shortcuts),
+              shortcuts != [allWindowsShortcut, currentAppShortcut, launcherShortcut] else { return }
         if let action = state.finish(commit: false) { onAction?(action) }
         allWindowsShortcut = allWindows
         currentAppShortcut = currentApp
+        launcherShortcut = launcher
     }
 
     func beginRecording(target: ShortcutTarget, onSave: @escaping (KeyboardShortcut) -> Bool) {
@@ -302,6 +314,7 @@ final class ShortcutController: ObservableObject {
             }
         }
 
+        if launcherShortcut.matches(keyCode: keyCode, flags: flags) { return .toggleLauncher }
         let currentAppOnly: Bool
         let shortcut: KeyboardShortcut
         if allWindowsShortcut.matches(keyCode: keyCode, flags: flags) {
@@ -377,6 +390,13 @@ final class ShortcutController: ObservableObject {
               controller.modifierAction(flags: .maskShift) == .commit,
               controller.keyAction(keyCode: 50, flags: .maskCommand)
                 == .begin(currentAppOnly: true, reverse: false),
+              controller.keyAction(keyCode: 53, flags: .maskCommand) == .cancel,
+              KeyboardShortcut.launcher.display == "⌥Space",
+              controller.keyAction(keyCode: 49, flags: .maskAlternate) == .toggleLauncher,
+              controller.keyAction(keyCode: 49, flags: .maskAlternate) == .toggleLauncher,
+              controller.keyAction(keyCode: 49, flags: [.maskAlternate, .maskCommand]) == nil,
+              controller.keyAction(keyCode: 48, flags: .maskCommand) == .begin(currentAppOnly: false, reverse: false),
+              controller.keyAction(keyCode: 49, flags: .maskAlternate) == nil,
               controller.keyAction(keyCode: 53, flags: .maskCommand) == .cancel else { return false }
 
         let custom = KeyboardShortcut(keyCode: 16, modifiers: [.maskControl, .maskAlternate], keyLabel: "Y")
@@ -410,7 +430,12 @@ final class ShortcutController: ObservableObject {
         controller.configure(allWindows: .allWindows, currentApp: .currentApp)
         guard cancelled, controller.modifierAction(flags: []) == nil else { return false }
         controller.configure(allWindows: .allWindows, currentApp: .allWindows)
-        guard controller.currentAppShortcut == .currentApp else { return false }
+        controller.configure(allWindows: .allWindows, currentApp: .currentApp, launcher: .allWindows)
+        guard controller.currentAppShortcut == .currentApp, controller.launcherShortcut == .launcher else { return false }
+        controller.configure(allWindows: .allWindows, currentApp: .currentApp, launcher: custom)
+        guard controller.keyAction(keyCode: 16, flags: custom.modifiers) == .toggleLauncher,
+              controller.keyAction(keyCode: 49, flags: .maskAlternate) == nil else { return false }
+        controller.configure(allWindows: .allWindows, currentApp: .currentApp)
 
         guard let event = NSEvent.keyEvent(with: .keyDown, location: .zero,
                                           modifierFlags: [.control, .option], timestamp: 0,

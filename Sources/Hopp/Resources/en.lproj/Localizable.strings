@@ -34,3 +34,7 @@
 "Full screen %@" = "Full screen %@";
 "Current" = "Current";
 "Current desktop" = "Current desktop";
+"App launcher" = "App launcher";
+"Search apps" = "Search apps";
+"No matching apps" = "No matching apps";
+"%@ apps" = "%@ apps";
