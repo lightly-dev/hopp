@@ -36,3 +36,24 @@ Self-checks:
 dist/Hopp.app/Contents/MacOS/Hopp --self-check
 dist/Hopp.app/Contents/MacOS/Hopp --ui-self-check
 ```
+
+## Releasing
+
+Pushing a `v*` tag runs `.github/workflows/release.yml`, which tests, builds a universal app, packages a DMG and publishes a GitHub release. The tag must match `VERSION`:
+
+```bash
+echo 0.2.0 > VERSION
+git commit -am "chore(release): prepare v0.2.0"
+git tag v0.2.0
+git push origin main v0.2.0
+```
+
+Signing depends on which repository secrets are set:
+
+| Secrets | Signing |
+| --- | --- |
+| None | Ad-hoc. Users must right-click → Open the first time, and re-grant Accessibility after every update |
+| `MACOS_CERTIFICATE_P12`, `MACOS_CERTIFICATE_PASSWORD` | Self-signed certificate named “Hopp Release Signing”. Accessibility access survives updates |
+| The two above plus `NOTARY_APPLE_ID`, `NOTARY_TEAM_ID`, `NOTARY_PASSWORD` | Developer ID certificate, notarized and stapled. Opens without warnings |
+
+`MACOS_CERTIFICATE_P12` is the base64 of an exported `.p12` (`base64 -i cert.p12 | pbcopy`).

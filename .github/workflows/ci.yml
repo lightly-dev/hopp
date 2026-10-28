@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: swift test
+      - name: Self-checks
+        run: |
+          swift build
+          "$(swift build --show-bin-path)/Hopp" --self-check
+          "$(swift build --show-bin-path)/Hopp" --ui-self-check
