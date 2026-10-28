@@ -9,6 +9,7 @@ final class AppSettings: ObservableObject {
     @Published private(set) var currentAppShortcut: KeyboardShortcut
     @Published private(set) var launcherShortcut: KeyboardShortcut
     @Published private(set) var showWindowsFromAllDesktops: Bool
+    @Published private(set) var showWindowsFromCurrentDisplayOnly: Bool
     @Published private(set) var keepSwitcherOpen: Bool
 
     private let defaults: UserDefaults
@@ -16,6 +17,7 @@ final class AppSettings: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         showWindowsFromAllDesktops = defaults.object(forKey: "showWindowsFromAllDesktops") as? Bool ?? false
+        showWindowsFromCurrentDisplayOnly = defaults.object(forKey: "showWindowsFromCurrentDisplayOnly") as? Bool ?? false
         keepSwitcherOpen = defaults.object(forKey: "keepSwitcherOpen") as? Bool ?? false
         func loadShortcut(_ key: String, fallback: KeyboardShortcut) -> KeyboardShortcut {
             guard let data = defaults.data(forKey: key),
@@ -36,6 +38,11 @@ final class AppSettings: ObservableObject {
     func setLanguage(_ language: AppLanguage) {
         self.language = language
         defaults.set(language.rawValue, forKey: "language")
+    }
+
+    func setShowWindowsFromCurrentDisplayOnly(_ enabled: Bool) {
+        showWindowsFromCurrentDisplayOnly = enabled
+        defaults.set(enabled, forKey: "showWindowsFromCurrentDisplayOnly")
     }
 
     func setShowWindowsFromAllDesktops(_ enabled: Bool) {
@@ -87,6 +94,11 @@ final class AppSettings: ObservableObject {
         guard AppSettings(defaults: defaults).showWindowsFromAllDesktops else { return false }
         initial.setShowWindowsFromAllDesktops(false)
         guard !AppSettings(defaults: defaults).showWindowsFromAllDesktops else { return false }
+        guard !initial.showWindowsFromCurrentDisplayOnly else { return false }
+        initial.setShowWindowsFromCurrentDisplayOnly(true)
+        guard AppSettings(defaults: defaults).showWindowsFromCurrentDisplayOnly else { return false }
+        initial.setShowWindowsFromCurrentDisplayOnly(false)
+        guard !AppSettings(defaults: defaults).showWindowsFromCurrentDisplayOnly else { return false }
         guard !initial.keepSwitcherOpen else { return false }
         initial.setKeepSwitcherOpen(true)
         guard AppSettings(defaults: defaults).keepSwitcherOpen else { return false }
@@ -197,6 +209,12 @@ struct SettingsView: View {
         Group {
             settingsRow("Window switcher") {
                 VStack(alignment: .leading, spacing: 8) {
+                    Toggle(L10n.text("Only show windows on the current display", language: language), isOn: Binding(
+                        get: { settings.showWindowsFromCurrentDisplayOnly },
+                        set: settings.setShowWindowsFromCurrentDisplayOnly
+                    ))
+                    Text(L10n.text("With multiple displays, list only windows on the display under the pointer.", language: language))
+                        .foregroundStyle(.secondary)
                     Toggle(L10n.text("Show windows from all desktops", language: language), isOn: Binding(
                         get: { settings.showWindowsFromAllDesktops }, set: settings.setShowWindowsFromAllDesktops
                     ))

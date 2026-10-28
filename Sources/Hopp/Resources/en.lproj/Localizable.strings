@@ -40,3 +40,5 @@
 "%@ apps" = "%@ apps";
 "Keep switcher open after releasing modifiers" = "Keep switcher open after releasing modifiers";
 "Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close." = "Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close.";
+"Only show windows on the current display" = "Only show windows on the current display";
+"With multiple displays, list only windows on the display under the pointer." = "With multiple displays, list only windows on the display under the pointer.";
