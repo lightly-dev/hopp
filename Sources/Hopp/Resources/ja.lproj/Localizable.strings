@@ -38,3 +38,5 @@
 "Search apps" = "アプリを検索";
 "No matching apps" = "一致するアプリはありません";
 "%@ apps" = "%@ 個のアプリ";
+"Keep switcher open after releasing modifiers" = "修飾キーを離しても切り替え画面を開いたままにする";
+"Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close." = "修飾キーを押し続けなくても入力して検索できます。Return で切り替え、Esc または外側をクリックで閉じます。";

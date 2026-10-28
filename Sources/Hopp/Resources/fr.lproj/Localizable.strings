@@ -38,3 +38,5 @@
 "Search apps" = "Rechercher des apps";
 "No matching apps" = "Aucune app correspondante";
 "%@ apps" = "%@ apps";
+"Keep switcher open after releasing modifiers" = "Garder le sélecteur ouvert après avoir relâché les modificateurs";
+"Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close." = "Tapez pour rechercher sans maintenir le modificateur. Appuyez sur Retour pour basculer ; appuyez sur Échap ou cliquez à l’extérieur pour fermer.";

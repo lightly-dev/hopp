@@ -24,6 +24,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var selectedIndex = 0
     private var currentAppOnly: Bool?
     private var currentAppPID: pid_t?
+    private var outsideClickMonitors: [Any] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -50,6 +51,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func configureShortcuts() {
         shortcuts.configure(allWindows: settings.allWindowsShortcut, currentApp: settings.currentAppShortcut,
                             launcher: settings.launcherShortcut)
+        shortcuts.keepsSwitcherOpen = settings.keepSwitcherOpen
         shortcuts.canBegin = { [weak self] currentAppOnly in
             self?.availableWindows(currentAppOnly: currentAppOnly).isEmpty == false
         }
@@ -74,6 +76,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     self.shortcuts.configure(allWindows: self.settings.allWindowsShortcut,
                                              currentApp: self.settings.currentAppShortcut,
                                              launcher: self.settings.launcherShortcut)
+                    self.shortcuts.keepsSwitcherOpen = self.settings.keepSwitcherOpen
                     self.windowService.setIncludeAllSpaces(self.settings.showWindowsFromAllDesktops)
                     self.settingsWindow?.title = L10n.text("Hopp Settings", language: self.settings.language)
                     if self.currentAppOnly != nil { self.refreshVisibleSwitcher() }
@@ -141,6 +144,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
                         groupBySpace: settings.showWindowsFromAllDesktops,
                         totalWindowCount: switchingWindowCount, language: settings.language)
             }
+            if settings.keepSwitcherOpen { monitorOutsideClicks() }
         case let .step(amount):
             guard !switchingResults.isEmpty else { return }
             selectedIndex = (selectedIndex + amount % switchingResults.count + switchingResults.count)
@@ -210,7 +214,26 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
 
+    /// A switcher that stays open after the modifiers are released closes on any click outside it.
+    private func monitorOutsideClicks() {
+        guard outsideClickMonitors.isEmpty else { return }
+        let mask: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        outsideClickMonitors = [
+            NSEvent.addGlobalMonitorForEvents(matching: mask) { [weak self] _ in
+                MainActor.assumeIsolated { self?.finishSwitcher(activating: nil) }
+            },
+            NSEvent.addLocalMonitorForEvents(matching: mask) { [weak self] event in
+                MainActor.assumeIsolated {
+                    if !(event.window is SwitcherPanel) { self?.finishSwitcher(activating: nil) }
+                }
+                return event
+            }
+        ].compactMap { $0 }
+    }
+
     private func finishSwitcher(activating id: String?) {
+        outsideClickMonitors.forEach(NSEvent.removeMonitor)
+        outsideClickMonitors = []
         shortcuts.resetState()
         switchers.values.forEach { $0.hideSwitcher() }
         switchingResults = []

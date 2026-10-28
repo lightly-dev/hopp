@@ -9,12 +9,14 @@ final class AppSettings: ObservableObject {
     @Published private(set) var currentAppShortcut: KeyboardShortcut
     @Published private(set) var launcherShortcut: KeyboardShortcut
     @Published private(set) var showWindowsFromAllDesktops: Bool
+    @Published private(set) var keepSwitcherOpen: Bool
 
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         showWindowsFromAllDesktops = defaults.object(forKey: "showWindowsFromAllDesktops") as? Bool ?? false
+        keepSwitcherOpen = defaults.object(forKey: "keepSwitcherOpen") as? Bool ?? false
         func loadShortcut(_ key: String, fallback: KeyboardShortcut) -> KeyboardShortcut {
             guard let data = defaults.data(forKey: key),
                   let shortcut = try? JSONDecoder().decode(KeyboardShortcut.self, from: data),
@@ -39,6 +41,11 @@ final class AppSettings: ObservableObject {
     func setShowWindowsFromAllDesktops(_ enabled: Bool) {
         showWindowsFromAllDesktops = enabled
         defaults.set(enabled, forKey: "showWindowsFromAllDesktops")
+    }
+
+    func setKeepSwitcherOpen(_ enabled: Bool) {
+        keepSwitcherOpen = enabled
+        defaults.set(enabled, forKey: "keepSwitcherOpen")
     }
 
     @discardableResult
@@ -80,6 +87,11 @@ final class AppSettings: ObservableObject {
         guard AppSettings(defaults: defaults).showWindowsFromAllDesktops else { return false }
         initial.setShowWindowsFromAllDesktops(false)
         guard !AppSettings(defaults: defaults).showWindowsFromAllDesktops else { return false }
+        guard !initial.keepSwitcherOpen else { return false }
+        initial.setKeepSwitcherOpen(true)
+        guard AppSettings(defaults: defaults).keepSwitcherOpen else { return false }
+        initial.setKeepSwitcherOpen(false)
+        guard !AppSettings(defaults: defaults).keepSwitcherOpen else { return false }
         let settings = AppSettings(defaults: defaults)
         settings.setLanguage(.ja)
         guard AppSettings(defaults: defaults).language == .ja,
@@ -189,6 +201,11 @@ struct SettingsView: View {
                         get: { settings.showWindowsFromAllDesktops }, set: settings.setShowWindowsFromAllDesktops
                     ))
                     Text(L10n.text("The current desktop comes first in recent order. Other desktops stay grouped in a stable order.", language: language))
+                        .foregroundStyle(.secondary)
+                    Toggle(L10n.text("Keep switcher open after releasing modifiers", language: language), isOn: Binding(
+                        get: { settings.keepSwitcherOpen }, set: settings.setKeepSwitcherOpen
+                    ))
+                    Text(L10n.text("Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close.", language: language))
                         .foregroundStyle(.secondary)
                 }
                 .toggleStyle(.checkbox)

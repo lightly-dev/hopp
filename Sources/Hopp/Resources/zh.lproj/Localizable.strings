@@ -38,3 +38,5 @@
 "Search apps" = "搜索应用";
 "No matching apps" = "没有匹配的应用";
 "%@ apps" = "%@ 个应用";
+"Keep switcher open after releasing modifiers" = "松开修饰键后保持切换器打开";
+"Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close." = "无需按住修饰键即可输入搜索。按 Return 切换，按 Esc 或点击外部关闭。";
