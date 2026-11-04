@@ -28,11 +28,18 @@ public enum WindowSwitcher {
         }
     }
 
-    public static func filter(_ windows: [WindowInfo], query: String, allSpaces: Bool) -> [WindowSearch.Match] {
+    /// `display` is the UUID of the display the switcher is used on; its current desktop comes first,
+    /// ahead of the current desktops of other displays.
+    public static func filter(_ windows: [WindowInfo], query: String, allSpaces: Bool,
+                              display: String? = nil) -> [WindowSearch.Match] {
         guard allSpaces else { return WindowSearch.filter(windows.filter(\.isOnCurrentSpace), query: query) }
+        func rank(_ window: WindowInfo) -> Int {
+            guard window.isOnCurrentSpace else { return 2 }
+            return display != nil && window.space?.displayID == display ? 0 : 1
+        }
         let ordered = windows.enumerated().sorted { lhs, rhs in
             let a = lhs.element, b = rhs.element
-            if a.isOnCurrentSpace != b.isOnCurrentSpace { return a.isOnCurrentSpace }
+            if rank(a) != rank(b) { return rank(a) < rank(b) }
             if a.space?.id != b.space?.id {
                 return (a.space?.index ?? 0) < (b.space?.index ?? 0)
             }

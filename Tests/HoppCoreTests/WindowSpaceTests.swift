@@ -39,6 +39,21 @@ final class WindowSpaceTests: XCTestCase {
         XCTAssertTrue(WindowSwitcher.filter(windows, query: "missing", allSpaces: true).isEmpty)
     }
 
+    func testCurrentDesktopOfTheSwitcherDisplayComesFirst() {
+        let a = WindowSpace(id: 1, index: 1, isCurrent: true, displayID: "A")
+        let aOther = WindowSpace(id: 2, index: 2, isCurrent: false, displayID: "A")
+        let b = WindowSpace(id: 3, index: 3, isCurrent: true, displayID: "B")
+        let windows = [window("a-other", app: "Notes", space: aOther),
+                       window("a", app: "Editor", space: a),
+                       window("b", app: "Chat", space: b)]
+        XCTAssertEqual(WindowSwitcher.filter(windows, query: "", allSpaces: true, display: "A").map(\.window.id),
+                       ["a", "b", "a-other"])
+        XCTAssertEqual(WindowSwitcher.filter(windows, query: "", allSpaces: true, display: "B").map(\.window.id),
+                       ["b", "a", "a-other"])
+        XCTAssertEqual(WindowSwitcher.filter(windows, query: "", allSpaces: true, display: "Unknown").map(\.window.id),
+                       ["a", "b", "a-other"])
+    }
+
     func testUnknownDesktopRemainsAvailableWhenTopologyIsUnavailable() {
         let windows = [window("fallback", app: "Editor", space: nil)]
         XCTAssertEqual(WindowSwitcher.filter(windows, query: "", allSpaces: false).map(\.window.id), ["fallback"])
