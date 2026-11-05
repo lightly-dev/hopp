@@ -42,3 +42,4 @@
 "Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close." = "修飾キーを押し続けなくても入力して検索できます。Return で切り替え、Esc または外側をクリックで閉じます。";
 "Only show windows on the current display" = "現在のディスプレイのウインドウのみ表示";
 "With multiple displays, list only windows on the display under the pointer." = "複数のディスプレイを使用している場合、ポインタがあるディスプレイ上のウインドウのみを表示します。";
+"Switch to Window" = "ウインドウに切り替え";

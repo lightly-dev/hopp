@@ -3,6 +3,10 @@ import HoppCore
 
 let appAccentColor = NSColor(srgbRed: 80 / 255, green: 151 / 255,
                             blue: 247 / 255, alpha: 1)
+private let switcherSelectionColor = NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.07)
+private let switcherRowHeight: CGFloat = 38
+private let switcherHeaderHeight: CGFloat = 56
+private let switcherFooterHeight: CGFloat = 44
 
 @MainActor
 final class SwitcherPanel: NSPanel {
@@ -10,6 +14,7 @@ final class SwitcherPanel: NSPanel {
     private let scroll = NSScrollView()
     private let queryLabel = NSTextField(labelWithString: "")
     private let countLabel = NSTextField(labelWithString: "")
+    private let actionLabel = NSTextField(labelWithString: "")
     private let emptyTitle = NSTextField(labelWithString: "")
     private let emptyHint = NSTextField(labelWithString: "")
     private let emptyState = NSStackView()
@@ -40,27 +45,45 @@ final class SwitcherPanel: NSPanel {
         background.state = .active
         background.appearance = NSAppearance(named: .aqua)
         background.wantsLayer = true
-        background.layer?.cornerRadius = 10
+        background.layer?.cornerRadius = 14
         background.layer?.masksToBounds = true
+        // Lift the material towards white so the panel reads as a light, solid sheet.
+        let tint = NSView()
+        tint.wantsLayer = true
+        tint.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.6).cgColor
+        tint.autoresizingMask = [.width, .height]
+        background.addSubview(tint)
 
         let header = NSView()
         let searchIcon = NSImageView()
         searchIcon.image = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
-        searchIcon.contentTintColor = .secondaryLabelColor
-        queryLabel.font = .systemFont(ofSize: 13)
+        searchIcon.symbolConfiguration = .init(pointSize: 16, weight: .regular)
+        searchIcon.contentTintColor = .tertiaryLabelColor
+        queryLabel.font = .systemFont(ofSize: 20)
         queryLabel.lineBreakMode = .byTruncatingTail
         queryLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        countLabel.font = .systemFont(ofSize: 12)
-        countLabel.textColor = .secondaryLabelColor
-        countLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        let divider = NSBox()
-        divider.boxType = .separator
-        for view in [searchIcon, queryLabel, countLabel, divider] {
+        for view in [searchIcon, queryLabel] {
             view.translatesAutoresizingMaskIntoConstraints = false
             header.addSubview(view)
         }
         header.translatesAutoresizingMaskIntoConstraints = false
         background.addSubview(header)
+
+        // Footer: window count on the left, the Return action on the right.
+        let footer = NSView()
+        let footerDivider = NSBox()
+        footerDivider.boxType = .separator
+        countLabel.font = .systemFont(ofSize: 13)
+        countLabel.textColor = .secondaryLabelColor
+        actionLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        actionLabel.textColor = .labelColor
+        let returnKey = KeyCapView(label: "↩")
+        for view in [footerDivider, countLabel, actionLabel, returnKey] {
+            view.translatesAutoresizingMaskIntoConstraints = false
+            footer.addSubview(view)
+        }
+        footer.translatesAutoresizingMaskIntoConstraints = false
+        background.addSubview(footer)
 
         let emptyIcon = NSImageView()
         emptyIcon.image = searchIcon.image
@@ -87,7 +110,7 @@ final class SwitcherPanel: NSPanel {
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 0
-        stack.edgeInsets = NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        stack.edgeInsets = NSEdgeInsets(top: 4, left: 8, bottom: 8, right: 8)
         stack.translatesAutoresizingMaskIntoConstraints = false
         scroll.documentView = stack
         background.addSubview(scroll)
@@ -95,25 +118,34 @@ final class SwitcherPanel: NSPanel {
             header.leadingAnchor.constraint(equalTo: background.leadingAnchor),
             header.trailingAnchor.constraint(equalTo: background.trailingAnchor),
             header.topAnchor.constraint(equalTo: background.topAnchor),
-            header.heightAnchor.constraint(equalToConstant: 40),
-            searchIcon.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            header.heightAnchor.constraint(equalToConstant: switcherHeaderHeight),
+            searchIcon.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 22),
             searchIcon.centerYAnchor.constraint(equalTo: header.centerYAnchor),
-            searchIcon.widthAnchor.constraint(equalToConstant: 16),
-            searchIcon.heightAnchor.constraint(equalToConstant: 16),
-            queryLabel.leadingAnchor.constraint(equalTo: searchIcon.trailingAnchor, constant: 10),
+            searchIcon.widthAnchor.constraint(equalToConstant: 18),
+            searchIcon.heightAnchor.constraint(equalToConstant: 18),
+            queryLabel.leadingAnchor.constraint(equalTo: searchIcon.trailingAnchor, constant: 12),
             queryLabel.centerYAnchor.constraint(equalTo: header.centerYAnchor),
-            queryLabel.trailingAnchor.constraint(lessThanOrEqualTo: countLabel.leadingAnchor, constant: -12),
-            countLabel.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
-            countLabel.centerYAnchor.constraint(equalTo: header.centerYAnchor),
-            divider.leadingAnchor.constraint(equalTo: header.leadingAnchor),
-            divider.trailingAnchor.constraint(equalTo: header.trailingAnchor),
-            divider.bottomAnchor.constraint(equalTo: header.bottomAnchor),
+            queryLabel.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -22),
+            footer.leadingAnchor.constraint(equalTo: background.leadingAnchor),
+            footer.trailingAnchor.constraint(equalTo: background.trailingAnchor),
+            footer.bottomAnchor.constraint(equalTo: background.bottomAnchor),
+            footer.heightAnchor.constraint(equalToConstant: switcherFooterHeight),
+            footerDivider.leadingAnchor.constraint(equalTo: footer.leadingAnchor),
+            footerDivider.trailingAnchor.constraint(equalTo: footer.trailingAnchor),
+            footerDivider.topAnchor.constraint(equalTo: footer.topAnchor),
+            countLabel.leadingAnchor.constraint(equalTo: footer.leadingAnchor, constant: 20),
+            countLabel.centerYAnchor.constraint(equalTo: footer.centerYAnchor),
+            returnKey.trailingAnchor.constraint(equalTo: footer.trailingAnchor, constant: -16),
+            returnKey.centerYAnchor.constraint(equalTo: footer.centerYAnchor),
+            actionLabel.trailingAnchor.constraint(equalTo: returnKey.leadingAnchor, constant: -8),
+            actionLabel.centerYAnchor.constraint(equalTo: footer.centerYAnchor),
+            actionLabel.leadingAnchor.constraint(greaterThanOrEqualTo: countLabel.trailingAnchor, constant: 12),
             emptyState.centerXAnchor.constraint(equalTo: scroll.centerXAnchor),
             emptyState.centerYAnchor.constraint(equalTo: scroll.centerYAnchor),
             scroll.leadingAnchor.constraint(equalTo: background.leadingAnchor),
             scroll.trailingAnchor.constraint(equalTo: background.trailingAnchor),
             scroll.topAnchor.constraint(equalTo: header.bottomAnchor),
-            scroll.bottomAnchor.constraint(equalTo: background.bottomAnchor),
+            scroll.bottomAnchor.constraint(equalTo: footer.topAnchor),
             stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor)
         ])
         contentView = background
@@ -141,7 +173,8 @@ final class SwitcherPanel: NSPanel {
         }
         let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
         queryLabel.stringValue = query.isEmpty ? L10n.text("Type an app name or window title", language: language) : query
-        queryLabel.textColor = query.isEmpty ? .secondaryLabelColor : .labelColor
+        queryLabel.textColor = query.isEmpty ? .tertiaryLabelColor : .labelColor
+        actionLabel.stringValue = L10n.text("Switch to Window", language: language)
         queryLabel.setAccessibilityLabel(L10n.text("Window search", language: language))
         countLabel.stringValue = L10n.format(query.isEmpty ? "%@ windows" : "%@ results",
                                             String(results.count), language: language)
@@ -167,19 +200,16 @@ final class SwitcherPanel: NSPanel {
                     title = L10n.text("Current desktop", language: language)
                 }
                 let label = NSTextField(labelWithString: title)
-                label.font = .systemFont(ofSize: 12, weight: .semibold)
+                label.font = .systemFont(ofSize: 12, weight: .medium)
                 label.textColor = .secondaryLabelColor
-                label.setContentHuggingPriority(.required, for: .horizontal)
-                let line = NSBox()
-                line.boxType = .separator
-                let header = NSStackView(views: [label, line])
+                let header = NSStackView(views: [label])
                 header.identifier = NSUserInterfaceItemIdentifier("space-header")
                 header.orientation = .horizontal
-                header.alignment = .centerY
-                header.spacing = 8
+                header.alignment = .bottom
+                header.edgeInsets = NSEdgeInsets(top: 0, left: 12, bottom: 4, right: 12)
                 stack.addArrangedSubview(header)
                 header.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -16).isActive = true
-                header.heightAnchor.constraint(equalToConstant: 26).isActive = true
+                header.heightAnchor.constraint(equalToConstant: 28).isActive = true
                 sectionCount += 1
             }
             previousSpaceID = window.space?.id
@@ -197,9 +227,10 @@ final class SwitcherPanel: NSPanel {
         }
 
         let area = displayScreen.visibleFrame
-        let width = max(320, min(600, area.width - 48))
-        let height = min(max(CGFloat(totalWindowCount ?? results.count) * 28 + CGFloat(sectionCount) * 26 + 16, 100) + 40,
-                         max(140, area.height - 80))
+        let width = max(360, min(720, area.width - 48))
+        let listHeight = CGFloat(totalWindowCount ?? results.count) * switcherRowHeight + CGFloat(sectionCount) * 28 + 12
+        let height = min(max(listHeight, 120) + switcherHeaderHeight + switcherFooterHeight,
+                         max(220, area.height - 80))
         setFrame(NSRect(x: area.midX - width / 2, y: area.midY - height / 2,
                         width: width, height: height), display: true)
         layoutDocumentView()
@@ -234,13 +265,13 @@ final class SwitcherPanel: NSPanel {
 
     fileprivate var smokeLayoutIsValid: Bool {
         guard stack.arrangedSubviews.count >= 12,
-              stack.arrangedSubviews.allSatisfy({ $0.frame.height <= 28.5 }),
+              stack.arrangedSubviews.allSatisfy({ $0.frame.height <= switcherRowHeight + 0.5 }),
               stack.arrangedSubviews.compactMap({ $0 as? SwitcherRow }).allSatisfy({
                   $0.smokeColumnsAreValid && $0.smokeHitRegionsRouteToRow
                       && $0.smokeSelectionAppearanceIsValid
               }),
               let selectedRow else { return false }
-        return frame.width <= 600.5
+        return frame.width <= 720.5
             && frame.height <= displayScreen.visibleFrame.height - 79
             && stack.frame.height > scroll.contentSize.height
             && scroll.contentView.bounds.intersects(selectedRow.convert(selectedRow.bounds, to: scroll.contentView))
@@ -308,16 +339,14 @@ private final class SwitcherRow: NSButton {
         title = ""
         isBordered = false
         wantsLayer = true
-        layer?.cornerRadius = 6
-        layer?.backgroundColor = selected ? appAccentColor.cgColor : NSColor.clear.cgColor
-        let textColor = selected ? NSColor.white : NSColor.labelColor
-        appLabel.alignment = .right
-        appLabel.font = .systemFont(ofSize: 13)
-        appLabel.textColor = textColor
-        appLabel.lineBreakMode = .byTruncatingTail
-        titleLabel.font = .systemFont(ofSize: 13, weight: selected ? .medium : .regular)
-        titleLabel.textColor = textColor
+        layer?.cornerRadius = 8
+        layer?.backgroundColor = selected ? switcherSelectionColor.cgColor : NSColor.clear.cgColor
+        titleLabel.font = .systemFont(ofSize: 14)
+        titleLabel.textColor = .labelColor
         titleLabel.lineBreakMode = .byTruncatingTail
+        appLabel.font = .systemFont(ofSize: 14)
+        appLabel.textColor = .secondaryLabelColor
+        appLabel.lineBreakMode = .byTruncatingTail
         for (label, ranges) in [(appLabel, match.appRanges), (titleLabel, match.titleRanges)] where !ranges.isEmpty {
             let text = NSMutableAttributedString(attributedString: label.attributedStringValue)
             for range in ranges {
@@ -327,28 +356,30 @@ private final class SwitcherRow: NSButton {
             }
             label.attributedStringValue = text
         }
+        // The title gives way first so the app name stays readable next to it.
+        titleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        appLabel.setContentCompressionResistancePriority(.defaultLow + 10, for: .horizontal)
         iconView.imageScaling = .scaleProportionallyDown
         [appLabel, iconView, titleLabel].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             addSubview($0)
         }
         NSLayoutConstraint.activate([
-            appLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            appLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            appLabel.widthAnchor.constraint(equalToConstant: 150),
-            iconView.leadingAnchor.constraint(equalTo: appLabel.trailingAnchor, constant: 14),
+            iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
             iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
             iconView.widthAnchor.constraint(equalToConstant: 24),
             iconView.heightAnchor.constraint(equalToConstant: 24),
             titleLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
-            titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
+            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            appLabel.leadingAnchor.constraint(equalTo: titleLabel.trailingAnchor, constant: 12),
+            appLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -12),
+            appLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         target = self
         self.action = #selector(invoke)
-        heightAnchor.constraint(equalToConstant: 28).isActive = true
-        setAccessibilityLabel("\(window.appName), \(window.displayTitle)")
+        heightAnchor.constraint(equalToConstant: switcherRowHeight).isActive = true
+        setAccessibilityLabel("\(window.displayTitle), \(window.appName)")
     }
 
     required init?(coder: NSCoder) { nil }
@@ -366,7 +397,7 @@ private final class SwitcherRow: NSButton {
     override func mouseEntered(with event: NSEvent) { selectUnderPointer(event) }
     override func mouseMoved(with event: NSEvent) { selectUnderPointer(event) }
 
-    fileprivate var smokeHighlighted: Bool { layer?.backgroundColor == appAccentColor.cgColor }
+    fileprivate var smokeHighlighted: Bool { layer?.backgroundColor == switcherSelectionColor.cgColor }
     fileprivate func smokePointerMove(_ pointer: NSPoint) { onPointerMove(pointer) }
 
     private func selectUnderPointer(_ event: NSEvent) {
@@ -377,8 +408,8 @@ private final class SwitcherRow: NSButton {
     override func hitTest(_ point: NSPoint) -> NSView? { super.hitTest(point) == nil ? nil : self }
 
     fileprivate var smokeColumnsAreValid: Bool {
-        appLabel.alignment == .right && appLabel.frame.maxX < iconView.frame.minX
-            && iconView.frame.maxX < titleLabel.frame.minX
+        iconView.frame.maxX < titleLabel.frame.minX && titleLabel.frame.maxX < appLabel.frame.minX
+            && appLabel.frame.maxX <= bounds.maxX
     }
 
     fileprivate var smokeHitRegionsRouteToRow: Bool {
@@ -389,11 +420,8 @@ private final class SwitcherRow: NSButton {
     }
 
     fileprivate var smokeSelectionAppearanceIsValid: Bool {
-        selected
-            ? layer?.backgroundColor == appAccentColor.cgColor
-                && appLabel.textColor == .white && titleLabel.textColor == .white
-            : layer?.backgroundColor == NSColor.clear.cgColor
-                && appLabel.textColor == .labelColor && titleLabel.textColor == .labelColor
+        layer?.backgroundColor == (selected ? switcherSelectionColor : NSColor.clear).cgColor
+            && titleLabel.textColor == .labelColor && appLabel.textColor == .secondaryLabelColor
     }
 
     fileprivate var smokeSearchHighlightsAreValid: Bool {
@@ -408,7 +436,8 @@ private final class SwitcherRow: NSButton {
                     valid = valid && background == yellow && attributes[.foregroundColor] as? NSColor == .black
                         && attributes[.underlineStyle] == nil
                 } else {
-                    valid = valid && attributes[.foregroundColor] as? NSColor == (selected ? .white : .labelColor)
+                    valid = valid && attributes[.foregroundColor] as? NSColor
+                        == (label === titleLabel ? .labelColor : .secondaryLabelColor)
                 }
             }
         }
@@ -424,6 +453,31 @@ private final class SwitcherRow: NSButton {
     }
 
     @objc private func invoke() { callback() }
+}
+
+/// A small rounded key cap such as ↩, shown next to an action name.
+@MainActor
+private final class KeyCapView: NSView {
+    init(label: String) {
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = 5
+        layer?.borderWidth = 1
+        layer?.borderColor = NSColor.black.withAlphaComponent(0.15).cgColor
+        let text = NSTextField(labelWithString: label)
+        text.font = .systemFont(ofSize: 12, weight: .medium)
+        text.textColor = .secondaryLabelColor
+        text.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(text)
+        NSLayoutConstraint.activate([
+            widthAnchor.constraint(equalToConstant: 26),
+            heightAnchor.constraint(equalToConstant: 22),
+            text.centerXAnchor.constraint(equalTo: centerXAnchor),
+            text.centerYAnchor.constraint(equalTo: centerYAnchor),
+        ])
+    }
+
+    required init?(coder: NSCoder) { nil }
 }
 
 @MainActor
