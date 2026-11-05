@@ -1,61 +1,79 @@
-# Hopp
+<p align="center">
+  <img src="assets/AppIcon.png" width="96" height="96" alt="Hopp app icon">
+</p>
 
-Hopp is a keyboard-first window switcher and app launcher for macOS. Press `⌘Tab` to see individual windows in most-recently-used order, type to search by app name or window title (pinyin works for Chinese names), and release the modifier to switch. Press `⌥Space` to search installed apps and launch one.
+<h1 align="center">Hopp</h1>
 
-## Features
+<p align="center">
+  <strong>Jump to any window, not just any app.</strong><br>
+  A keyboard-first window switcher and app launcher for macOS. Under 4&nbsp;MB.
+</p>
 
-| Feature | How it works |
+<p align="center">
+  <a href="https://github.com/lightly-dev/hopp/releases/latest"><strong>Download for macOS</strong></a>
+  &nbsp;·&nbsp; macOS 13 or later &nbsp;·&nbsp; Apple silicon and Intel
+</p>
+
+<p align="center">
+  <img src="assets/screenshot.jpg" alt="The Hopp window switcher listing individual windows from Safari, Notes, Finder, Terminal, Mail, Calendar and Preview">
+</p>
+
+## Why Hopp
+
+The built-in `⌘Tab` switches between apps. When you have three Safari windows and two Finder windows open, you still have to hunt for the right one. Hopp lists every window on its own, in the order you last used them, so the window you want is one keystroke away.
+
+- **Every window, one list.** Windows appear individually with their titles, most recently used first. Minimized and hidden windows come back when you pick them.
+- **Type to find.** Keep holding the modifier and type part of an app name or window title. Matches are highlighted, and pinyin works for Chinese names (`weixin` finds 微信).
+- **Launch apps too.** `⌥Space` opens a search box for every installed app. Pick one to open it, or bring it forward if it's already running.
+- **Built for the keyboard.** Release the modifier to switch, `Shift` to go backward, `Esc` to cancel. The global shortcuts can all be changed.
+- **Feels native.** Liquid Glass on macOS 26, light and dark themes, and a quiet menu bar icon. No Dock icon, no windows in your way.
+
+## Lightweight by design
+
+Hopp is a native Swift and AppKit app. There's no Electron, no bundled browser engine and no background service.
+
+- **Under 4 MB to download**, as one universal build for Apple silicon and Intel.
+- **Opens instantly.** App icons are prepared in the background, so the launcher shows up without a pause.
+- **Runs quietly** from the menu bar, using the Accessibility API only to list and focus windows.
+- **Signed and notarized** by Apple, so it opens without security warnings.
+
+## Shortcuts
+
+| Shortcut | Action |
 | --- | --- |
-| Window switching | Lists individual windows rather than apps, in most recently used (MRU) order |
-| Keyboard switcher | `⌘Tab` for all windows and ``⌘` `` for the current app; both are customizable. Shift reverses, arrow keys move, `Esc` cancels, releasing the modifier confirms |
-| Search | Hold the modifier and type to filter by app name or window title, including pinyin for Chinese names; matches are highlighted |
-| All desktops | Settings → General → Show windows from all desktops groups the switcher by desktop |
-| Multiple displays | The switcher appears only on the display under the pointer. Settings → General → Only show windows on the current display limits the list to that display |
-| Keep open | Settings → General → Keep switcher open after releasing modifiers lets you type freely; `↩` switches, `Esc` or a click outside closes |
-| Window activation | Restores minimized or hidden windows when activated |
-| App launcher | `⌥Space` (customizable) opens a search box for installed apps, including pinyin and English names of localized apps. `↑`/`↓` select, `↩` launches or brings a running app forward, `Esc` closes |
+| `⌘Tab` | Switch between all windows |
+| ``⌘` `` | Switch between windows of the current app |
+| `⌥Space` | Open the app launcher |
+| Type while holding the modifier | Search by app name or window title |
+| `Shift`, `↑` / `↓` | Move backward, or move the selection |
+| Release the modifier, or `↩` | Switch to the selected window |
+| `Esc` | Close without switching |
 
-## Install and permissions
+All three shortcuts can be changed in Settings.
 
-1. Build the app (see below) and move `Hopp.app` to the Applications folder.
-2. Hopp lives in the menu bar with no Dock icon. Open “Settings…” from the menu bar icon.
-3. Grant Accessibility access in System Settings → Privacy & Security → Accessibility. Hopp needs it to discover and switch windows and to handle global shortcuts.
+## More options
 
-## Development
+- **All desktops:** show windows from every desktop, grouped by desktop with the current one first.
+- **Multiple displays:** the switcher opens on the display under the pointer and can list only that display's windows.
+- **Keep open:** keep the switcher open after you release the modifier, then type freely. `↩` switches, and `Esc` or a click outside closes it.
+- **Theme and language:** follow the system, or pick light or dark. Hopp is available in English, 简体中文, 日本語, Español and Français.
 
-Requires macOS 13 or later and Swift 5.9.
+## Install
+
+1. Download the latest DMG from [Releases](https://github.com/lightly-dev/hopp/releases/latest) and drag Hopp to Applications.
+2. Open Hopp. It lives in the menu bar.
+3. When asked, allow Hopp in System Settings → Privacy & Security → Accessibility. Hopp needs this to see and switch windows and to handle its shortcuts.
+
+## Build from source
+
+Requires macOS 13 or later and Swift 5.9. Building the app icon needs Xcode 26.
 
 ```bash
 swift test
-./scripts/build-app.sh            # release build, signs with an Apple Development identity
-SIGNING_MODE=adhoc ./scripts/build-app.sh   # local build without a certificate
-./scripts/build-dmg.sh            # package dist/Hopp.app into a DMG
+SIGNING_MODE=adhoc ./scripts/build-app.sh   # local build, no certificate needed
+./scripts/build-dmg.sh                      # package dist/Hopp.app into a DMG
 ```
 
-Self-checks:
+## License
 
-```bash
-dist/Hopp.app/Contents/MacOS/Hopp --self-check
-dist/Hopp.app/Contents/MacOS/Hopp --ui-self-check
-```
-
-## Releasing
-
-Pushing a `v*` tag runs `.github/workflows/release.yml`, which tests, builds a universal app, packages a DMG and publishes a GitHub release. The tag must match `VERSION`:
-
-```bash
-echo 0.2.0 > VERSION
-git commit -am "chore(release): prepare v0.2.0"
-git tag v0.2.0
-git push origin main v0.2.0
-```
-
-Signing depends on which repository secrets are set:
-
-| Secrets | Signing |
-| --- | --- |
-| None | Ad-hoc. Users must right-click → Open the first time, and re-grant Accessibility after every update |
-| `MACOS_CERTIFICATE_P12`, `MACOS_CERTIFICATE_PASSWORD` | Self-signed certificate named “Hopp Release Signing”. Accessibility access survives updates |
-| The two above plus `NOTARY_APPLE_ID`, `NOTARY_TEAM_ID`, `NOTARY_PASSWORD` | Developer ID certificate, notarized and stapled. Opens without warnings |
-
-`MACOS_CERTIFICATE_P12` is the base64 of an exported `.p12` (`base64 -i cert.p12 | pbcopy`).
+See [LICENSE](LICENSE).
