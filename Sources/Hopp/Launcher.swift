@@ -63,9 +63,9 @@ final class AppCatalog {
 @MainActor
 final class LauncherPanel: NSPanel, NSTextFieldDelegate {
     private static let maxRows = 60
-    private static let rowHeight: CGFloat = 40
     private let field = NSTextField()
     private let countLabel = NSTextField(labelWithString: "")
+    private let actionLabel = NSTextField(labelWithString: "")
     private let emptyLabel = NSTextField(labelWithString: "")
     private let stack = FlippedStackView()
     private let scroll = NSScrollView()
@@ -92,18 +92,12 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
 
-        let background = NSVisualEffectView()
-        background.material = .popover
-        background.blendingMode = .behindWindow
-        background.state = .active
-        background.appearance = NSAppearance(named: .aqua)
-        background.wantsLayer = true
-        background.layer?.cornerRadius = 12
-        background.layer?.masksToBounds = true
+        let background = makeSheetBackground()
 
         let searchIcon = NSImageView()
         searchIcon.image = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
-        searchIcon.contentTintColor = .secondaryLabelColor
+        searchIcon.symbolConfiguration = .init(pointSize: 16, weight: .regular)
+        searchIcon.contentTintColor = .tertiaryLabelColor
         field.isBordered = false
         field.drawsBackground = false
         field.focusRingType = .none
@@ -112,45 +106,53 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
         field.cell?.isScrollable = true
         field.delegate = self
         field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        countLabel.font = .systemFont(ofSize: 12)
+        countLabel.font = .systemFont(ofSize: 13)
         countLabel.textColor = .secondaryLabelColor
-        countLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        actionLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        actionLabel.textColor = .labelColor
+        let returnKey = KeyCapView(label: "↩")
         emptyLabel.font = .systemFont(ofSize: 13)
         emptyLabel.textColor = .secondaryLabelColor
-        let divider = NSBox()
-        divider.boxType = .separator
+        let footerDivider = NSBox()
+        footerDivider.boxType = .separator
 
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = true
         scroll.autohidesScrollers = true
+        scroll.scrollerStyle = .overlay
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 0
-        stack.edgeInsets = NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        stack.edgeInsets = NSEdgeInsets(top: 4, left: 8, bottom: 8, right: 8)
         stack.translatesAutoresizingMaskIntoConstraints = false
         scroll.documentView = stack
 
-        for view in [searchIcon, field, countLabel, divider, scroll, emptyLabel] {
+        for view in [searchIcon, field, scroll, emptyLabel, footerDivider, countLabel, actionLabel, returnKey] {
             view.translatesAutoresizingMaskIntoConstraints = false
             background.addSubview(view)
         }
         NSLayoutConstraint.activate([
-            searchIcon.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 18),
-            searchIcon.centerYAnchor.constraint(equalTo: background.topAnchor, constant: 26),
-            searchIcon.widthAnchor.constraint(equalToConstant: 20),
-            searchIcon.heightAnchor.constraint(equalToConstant: 20),
+            searchIcon.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 22),
+            searchIcon.centerYAnchor.constraint(equalTo: background.topAnchor, constant: sheetHeaderHeight / 2),
+            searchIcon.widthAnchor.constraint(equalToConstant: 18),
+            searchIcon.heightAnchor.constraint(equalToConstant: 18),
             field.leadingAnchor.constraint(equalTo: searchIcon.trailingAnchor, constant: 12),
             field.centerYAnchor.constraint(equalTo: searchIcon.centerYAnchor),
-            field.trailingAnchor.constraint(equalTo: countLabel.leadingAnchor, constant: -12),
-            countLabel.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -18),
-            countLabel.centerYAnchor.constraint(equalTo: searchIcon.centerYAnchor),
-            divider.leadingAnchor.constraint(equalTo: background.leadingAnchor),
-            divider.trailingAnchor.constraint(equalTo: background.trailingAnchor),
-            divider.topAnchor.constraint(equalTo: background.topAnchor, constant: 52),
+            field.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -22),
             scroll.leadingAnchor.constraint(equalTo: background.leadingAnchor),
             scroll.trailingAnchor.constraint(equalTo: background.trailingAnchor),
-            scroll.topAnchor.constraint(equalTo: divider.bottomAnchor),
-            scroll.bottomAnchor.constraint(equalTo: background.bottomAnchor),
+            scroll.topAnchor.constraint(equalTo: background.topAnchor, constant: sheetHeaderHeight),
+            scroll.bottomAnchor.constraint(equalTo: footerDivider.topAnchor),
+            footerDivider.leadingAnchor.constraint(equalTo: background.leadingAnchor),
+            footerDivider.trailingAnchor.constraint(equalTo: background.trailingAnchor),
+            footerDivider.bottomAnchor.constraint(equalTo: background.bottomAnchor, constant: -sheetFooterHeight),
+            countLabel.leadingAnchor.constraint(equalTo: background.leadingAnchor, constant: 20),
+            countLabel.centerYAnchor.constraint(equalTo: background.bottomAnchor, constant: -sheetFooterHeight / 2),
+            returnKey.trailingAnchor.constraint(equalTo: background.trailingAnchor, constant: -16),
+            returnKey.centerYAnchor.constraint(equalTo: countLabel.centerYAnchor),
+            actionLabel.trailingAnchor.constraint(equalTo: returnKey.leadingAnchor, constant: -8),
+            actionLabel.centerYAnchor.constraint(equalTo: countLabel.centerYAnchor),
+            actionLabel.leadingAnchor.constraint(greaterThanOrEqualTo: countLabel.trailingAnchor, constant: 12),
             emptyLabel.centerXAnchor.constraint(equalTo: scroll.centerXAnchor),
             emptyLabel.centerYAnchor.constraint(equalTo: scroll.centerYAnchor),
             stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor)
@@ -169,11 +171,12 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
         field.placeholderString = L10n.text("Search apps", language: language)
         field.setAccessibilityLabel(L10n.text("Search apps", language: language))
         emptyLabel.stringValue = L10n.text("No matching apps", language: language)
+        actionLabel.stringValue = L10n.text("Open App", language: language)
         let screen = NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) }
             ?? NSScreen.main ?? NSScreen.screens.first
         if let area = screen?.visibleFrame {
-            let width = min(640, area.width - 48)
-            let height = min(52 + 8 * Self.rowHeight + 16, area.height - 80)
+            let width = min(720, area.width - 48)
+            let height = min(sheetHeaderHeight + 8 * sheetRowHeight + 12 + sheetFooterHeight, area.height - 80)
             setFrame(NSRect(x: area.midX - width / 2, y: area.maxY - area.height * 0.22 - height,
                             width: width, height: height), display: false)
         }
@@ -259,7 +262,7 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
             let detail = running.contains(URL(fileURLWithPath: match.app.path).standardizedFileURL.path)
                 ? L10n.text("Running", language: language) : match.app.alternateName
             let row = LauncherRow(
-                match: match, detail: detail, height: Self.rowHeight,
+                match: match, detail: detail,
                 onPointerMove: { [weak self] pointer in
                     guard let self, pointer != self.hoverOrigin else { return }
                     self.hoverOrigin = pointer
@@ -330,7 +333,7 @@ private final class LauncherRow: NSButton {
         didSet { applyAppearance() }
     }
 
-    init(match: AppSearch.Match, detail: String?, height: CGFloat,
+    init(match: AppSearch.Match, detail: String?,
          onPointerMove: @escaping (NSPoint) -> Void, action: @escaping () -> Void) {
         callback = action
         self.onPointerMove = onPointerMove
@@ -341,31 +344,33 @@ private final class LauncherRow: NSButton {
         title = ""
         isBordered = false
         wantsLayer = true
-        layer?.cornerRadius = 7
+        layer?.cornerRadius = 8
         let icon = NSWorkspace.shared.icon(forFile: match.app.path)
-        icon.size = NSSize(width: 28, height: 28)
+        icon.size = NSSize(width: 24, height: 24)
         let iconView = NSImageView(image: icon)
         nameLabel.font = .systemFont(ofSize: 14)
         nameLabel.lineBreakMode = .byTruncatingTail
-        nameLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        detailLabel.font = .systemFont(ofSize: 12)
+        nameLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        nameLabel.setContentCompressionResistancePriority(.defaultLow + 10, for: .horizontal)
+        detailLabel.font = .systemFont(ofSize: 14)
+        detailLabel.textColor = .secondaryLabelColor
         detailLabel.lineBreakMode = .byTruncatingTail
-        detailLabel.setContentCompressionResistancePriority(.defaultLow - 1, for: .horizontal)
+        detailLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         [iconView, nameLabel, detailLabel].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             addSubview($0)
         }
         NSLayoutConstraint.activate([
-            iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+            iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
             iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: 28),
-            iconView.heightAnchor.constraint(equalToConstant: 28),
-            nameLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 10),
+            iconView.widthAnchor.constraint(equalToConstant: 24),
+            iconView.heightAnchor.constraint(equalToConstant: 24),
+            nameLabel.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: 12),
             nameLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            detailLabel.leadingAnchor.constraint(greaterThanOrEqualTo: nameLabel.trailingAnchor, constant: 12),
-            detailLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+            detailLabel.leadingAnchor.constraint(equalTo: nameLabel.trailingAnchor, constant: 12),
+            detailLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -12),
             detailLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            heightAnchor.constraint(equalToConstant: height)
+            heightAnchor.constraint(equalToConstant: sheetRowHeight)
         ])
         target = self
         self.action = #selector(invoke)
@@ -376,17 +381,16 @@ private final class LauncherRow: NSButton {
     required init?(coder: NSCoder) { nil }
 
     private func applyAppearance() {
-        layer?.backgroundColor = isCurrent ? appAccentColor.cgColor : NSColor.clear.cgColor
+        layer?.backgroundColor = isCurrent ? sheetSelectionColor.cgColor : NSColor.clear.cgColor
         let text = NSMutableAttributedString(string: nameLabel.stringValue, attributes: [
-            .font: NSFont.systemFont(ofSize: 14, weight: isCurrent ? .medium : .regular),
-            .foregroundColor: isCurrent ? NSColor.white : NSColor.labelColor
+            .font: NSFont.systemFont(ofSize: 14),
+            .foregroundColor: NSColor.labelColor
         ])
         for range in nameRanges {
             text.addAttributes([.backgroundColor: NSColor(srgbRed: 1, green: 229 / 255, blue: 138 / 255, alpha: 1),
                                 .foregroundColor: NSColor.black], range: range)
         }
         nameLabel.attributedStringValue = text
-        detailLabel.textColor = isCurrent ? NSColor.white.withAlphaComponent(0.8) : .secondaryLabelColor
     }
 
     override func updateTrackingAreas() {

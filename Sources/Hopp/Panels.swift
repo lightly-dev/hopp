@@ -3,10 +3,30 @@ import HoppCore
 
 let appAccentColor = NSColor(srgbRed: 80 / 255, green: 151 / 255,
                             blue: 247 / 255, alpha: 1)
-private let switcherSelectionColor = NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.07)
-private let switcherRowHeight: CGFloat = 38
-private let switcherHeaderHeight: CGFloat = 56
-private let switcherFooterHeight: CGFloat = 44
+// Shared look of the switcher and launcher sheets.
+let sheetSelectionColor = NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.07)
+let sheetRowHeight: CGFloat = 38
+let sheetHeaderHeight: CGFloat = 56
+let sheetFooterHeight: CGFloat = 44
+
+/// A light, rounded sheet background: system material lifted towards white.
+@MainActor
+func makeSheetBackground() -> NSVisualEffectView {
+    let background = NSVisualEffectView()
+    background.material = .popover
+    background.blendingMode = .behindWindow
+    background.state = .active
+    background.appearance = NSAppearance(named: .aqua)
+    background.wantsLayer = true
+    background.layer?.cornerRadius = 14
+    background.layer?.masksToBounds = true
+    let tint = NSView()
+    tint.wantsLayer = true
+    tint.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.6).cgColor
+    tint.autoresizingMask = [.width, .height]
+    background.addSubview(tint)
+    return background
+}
 
 @MainActor
 final class SwitcherPanel: NSPanel {
@@ -39,20 +59,7 @@ final class SwitcherPanel: NSPanel {
         hasShadow = true
         hidesOnDeactivate = false
 
-        let background = NSVisualEffectView()
-        background.material = .popover
-        background.blendingMode = .behindWindow
-        background.state = .active
-        background.appearance = NSAppearance(named: .aqua)
-        background.wantsLayer = true
-        background.layer?.cornerRadius = 14
-        background.layer?.masksToBounds = true
-        // Lift the material towards white so the panel reads as a light, solid sheet.
-        let tint = NSView()
-        tint.wantsLayer = true
-        tint.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.6).cgColor
-        tint.autoresizingMask = [.width, .height]
-        background.addSubview(tint)
+        let background = makeSheetBackground()
 
         let header = NSView()
         let searchIcon = NSImageView()
@@ -105,6 +112,7 @@ final class SwitcherPanel: NSPanel {
         scroll.drawsBackground = false
         scroll.hasVerticalScroller = true
         scroll.autohidesScrollers = true
+        scroll.scrollerStyle = .overlay
         scroll.translatesAutoresizingMaskIntoConstraints = false
 
         stack.orientation = .vertical
@@ -118,7 +126,7 @@ final class SwitcherPanel: NSPanel {
             header.leadingAnchor.constraint(equalTo: background.leadingAnchor),
             header.trailingAnchor.constraint(equalTo: background.trailingAnchor),
             header.topAnchor.constraint(equalTo: background.topAnchor),
-            header.heightAnchor.constraint(equalToConstant: switcherHeaderHeight),
+            header.heightAnchor.constraint(equalToConstant: sheetHeaderHeight),
             searchIcon.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 22),
             searchIcon.centerYAnchor.constraint(equalTo: header.centerYAnchor),
             searchIcon.widthAnchor.constraint(equalToConstant: 18),
@@ -129,7 +137,7 @@ final class SwitcherPanel: NSPanel {
             footer.leadingAnchor.constraint(equalTo: background.leadingAnchor),
             footer.trailingAnchor.constraint(equalTo: background.trailingAnchor),
             footer.bottomAnchor.constraint(equalTo: background.bottomAnchor),
-            footer.heightAnchor.constraint(equalToConstant: switcherFooterHeight),
+            footer.heightAnchor.constraint(equalToConstant: sheetFooterHeight),
             footerDivider.leadingAnchor.constraint(equalTo: footer.leadingAnchor),
             footerDivider.trailingAnchor.constraint(equalTo: footer.trailingAnchor),
             footerDivider.topAnchor.constraint(equalTo: footer.topAnchor),
@@ -228,8 +236,8 @@ final class SwitcherPanel: NSPanel {
 
         let area = displayScreen.visibleFrame
         let width = max(360, min(720, area.width - 48))
-        let listHeight = CGFloat(totalWindowCount ?? results.count) * switcherRowHeight + CGFloat(sectionCount) * 28 + 12
-        let height = min(max(listHeight, 120) + switcherHeaderHeight + switcherFooterHeight,
+        let listHeight = CGFloat(totalWindowCount ?? results.count) * sheetRowHeight + CGFloat(sectionCount) * 28 + 12
+        let height = min(max(listHeight, 120) + sheetHeaderHeight + sheetFooterHeight,
                          max(220, area.height - 80))
         setFrame(NSRect(x: area.midX - width / 2, y: area.midY - height / 2,
                         width: width, height: height), display: true)
@@ -265,7 +273,7 @@ final class SwitcherPanel: NSPanel {
 
     fileprivate var smokeLayoutIsValid: Bool {
         guard stack.arrangedSubviews.count >= 12,
-              stack.arrangedSubviews.allSatisfy({ $0.frame.height <= switcherRowHeight + 0.5 }),
+              stack.arrangedSubviews.allSatisfy({ $0.frame.height <= sheetRowHeight + 0.5 }),
               stack.arrangedSubviews.compactMap({ $0 as? SwitcherRow }).allSatisfy({
                   $0.smokeColumnsAreValid && $0.smokeHitRegionsRouteToRow
                       && $0.smokeSelectionAppearanceIsValid
@@ -340,7 +348,7 @@ private final class SwitcherRow: NSButton {
         isBordered = false
         wantsLayer = true
         layer?.cornerRadius = 8
-        layer?.backgroundColor = selected ? switcherSelectionColor.cgColor : NSColor.clear.cgColor
+        layer?.backgroundColor = selected ? sheetSelectionColor.cgColor : NSColor.clear.cgColor
         titleLabel.font = .systemFont(ofSize: 14)
         titleLabel.textColor = .labelColor
         titleLabel.lineBreakMode = .byTruncatingTail
@@ -378,7 +386,7 @@ private final class SwitcherRow: NSButton {
         ])
         target = self
         self.action = #selector(invoke)
-        heightAnchor.constraint(equalToConstant: switcherRowHeight).isActive = true
+        heightAnchor.constraint(equalToConstant: sheetRowHeight).isActive = true
         setAccessibilityLabel("\(window.displayTitle), \(window.appName)")
     }
 
@@ -397,7 +405,7 @@ private final class SwitcherRow: NSButton {
     override func mouseEntered(with event: NSEvent) { selectUnderPointer(event) }
     override func mouseMoved(with event: NSEvent) { selectUnderPointer(event) }
 
-    fileprivate var smokeHighlighted: Bool { layer?.backgroundColor == switcherSelectionColor.cgColor }
+    fileprivate var smokeHighlighted: Bool { layer?.backgroundColor == sheetSelectionColor.cgColor }
     fileprivate func smokePointerMove(_ pointer: NSPoint) { onPointerMove(pointer) }
 
     private func selectUnderPointer(_ event: NSEvent) {
@@ -420,7 +428,7 @@ private final class SwitcherRow: NSButton {
     }
 
     fileprivate var smokeSelectionAppearanceIsValid: Bool {
-        layer?.backgroundColor == (selected ? switcherSelectionColor : NSColor.clear).cgColor
+        layer?.backgroundColor == (selected ? sheetSelectionColor : NSColor.clear).cgColor
             && titleLabel.textColor == .labelColor && appLabel.textColor == .secondaryLabelColor
     }
 
@@ -457,7 +465,7 @@ private final class SwitcherRow: NSButton {
 
 /// A small rounded key cap such as ↩, shown next to an action name.
 @MainActor
-private final class KeyCapView: NSView {
+final class KeyCapView: NSView {
     init(label: String) {
         super.init(frame: .zero)
         wantsLayer = true
