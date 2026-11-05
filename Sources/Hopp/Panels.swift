@@ -51,6 +51,48 @@ func makeSheetBackground() -> (root: NSView, content: NSView) {
     return (background, background)
 }
 
+/// Where the switcher and the launcher sit: the same width, with their top edge at the same
+/// height on the display, so both sheets open in one place. Taller content grows downward.
+func sheetFrame(in area: NSRect, contentHeight: CGFloat) -> NSRect {
+    let width = max(360, min(720, area.width - 48))
+    let top = area.maxY - (area.height * 0.18).rounded()
+    let height = min(contentHeight, max(220, top - area.minY - 40))
+    return NSRect(x: (area.midX - width / 2).rounded(), y: top - height, width: width, height: height)
+}
+
+/// A blinking text cursor for search headers that show a label instead of an editable field.
+final class SearchCaretView: NSView {
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        wantsLayer = true
+        layer?.cornerRadius = 1
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override var wantsUpdateLayer: Bool { true }
+
+    override func updateLayer() {
+        let color: NSColor
+        if #available(macOS 14.0, *) { color = .textInsertionPointColor } else { color = .controlAccentColor }
+        layer?.backgroundColor = resolvedCGColor(color)
+    }
+
+    /// Shows the caret solid, then blinks like a text field's insertion point.
+    func restartBlink() {
+        guard let layer else { return }
+        layer.removeAnimation(forKey: "blink")
+        let blink = CAKeyframeAnimation(keyPath: "opacity")
+        blink.values = [1, 1, 0, 0]
+        blink.keyTimes = [0, 0.5, 0.5, 1]
+        blink.duration = 1.06
+        blink.repeatCount = .infinity
+        blink.beginTime = CACurrentMediaTime() + 0.5
+        blink.fillMode = .backwards
+        layer.add(blink, forKey: "blink")
+    }
+}
+
 extension NSView {
     /// Resolves a dynamic colour for this view's current light or dark appearance, for use on layers.
     func resolvedCGColor(_ color: NSColor) -> CGColor {
@@ -65,6 +107,8 @@ final class SwitcherPanel: NSPanel {
     private let stack = FlippedStackView()
     private let scroll = NSScrollView()
     private let queryLabel = NSTextField(labelWithString: "")
+    private let caret = SearchCaretView()
+    private var caretOffset: NSLayoutConstraint?
     private let countLabel = NSTextField(labelWithString: "")
     private let actionLabel = NSTextField(labelWithString: "")
     private let emptyTitle = NSTextField(labelWithString: "")
@@ -101,7 +145,7 @@ final class SwitcherPanel: NSPanel {
         queryLabel.font = .systemFont(ofSize: 20)
         queryLabel.lineBreakMode = .byTruncatingTail
         queryLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        for view in [searchIcon, queryLabel] {
+        for view in [searchIcon, queryLabel, caret] {
             view.translatesAutoresizingMaskIntoConstraints = false
             header.addSubview(view)
         }
@@ -166,6 +210,10 @@ final class SwitcherPanel: NSPanel {
             queryLabel.leadingAnchor.constraint(equalTo: searchIcon.trailingAnchor, constant: 12),
             queryLabel.centerYAnchor.constraint(equalTo: header.centerYAnchor),
             queryLabel.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -22),
+            caret.widthAnchor.constraint(equalToConstant: 2),
+            caret.heightAnchor.constraint(equalToConstant: 24),
+            caret.centerYAnchor.constraint(equalTo: queryLabel.centerYAnchor),
+            caret.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -20),
             footer.leadingAnchor.constraint(equalTo: background.leadingAnchor),
             footer.trailingAnchor.constraint(equalTo: background.trailingAnchor),
             footer.bottomAnchor.constraint(equalTo: background.bottomAnchor),
@@ -214,6 +262,7 @@ final class SwitcherPanel: NSPanel {
         let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
         queryLabel.stringValue = query.isEmpty ? L10n.text("Type an app name or window title", language: language) : query
         queryLabel.textColor = query.isEmpty ? .tertiaryLabelColor : .labelColor
+        placeCaret(after: query)
         actionLabel.stringValue = L10n.text("Switch to Window", language: language)
         queryLabel.setAccessibilityLabel(L10n.text("Window search", language: language))
         countLabel.stringValue = L10n.format(query.isEmpty ? "%@ windows" : "%@ results",
@@ -266,16 +315,25 @@ final class SwitcherPanel: NSPanel {
             if index == selectedIndex { selectedRow = row }
         }
 
-        let area = displayScreen.visibleFrame
-        let width = max(360, min(720, area.width - 48))
         let listHeight = CGFloat(totalWindowCount ?? results.count) * sheetRowHeight + CGFloat(sectionCount) * 28 + 12
-        let height = min(max(listHeight, 120) + sheetHeaderHeight + sheetFooterHeight,
-                         max(220, area.height - 80))
-        setFrame(NSRect(x: area.midX - width / 2, y: area.midY - height / 2,
-                        width: width, height: height), display: true)
+        setFrame(sheetFrame(in: displayScreen.visibleFrame,
+                            contentHeight: max(listHeight, 120) + sheetHeaderHeight + sheetFooterHeight),
+                 display: true)
         layoutDocumentView()
         self.selectedRow = selectedRow
         revealSelectedRow()
+    }
+
+    /// Before the placeholder like an empty text field, otherwise right after the typed text.
+    private func placeCaret(after query: String) {
+        let textWidth = query.isEmpty ? 0
+            : ceil((query as NSString).size(withAttributes: [.font: queryLabel.font as Any]).width) + 1
+        caretOffset?.isActive = false
+        let offset = caret.leadingAnchor.constraint(equalTo: queryLabel.leadingAnchor, constant: textWidth + 1)
+        offset.priority = .defaultHigh
+        offset.isActive = true
+        caretOffset = offset
+        caret.restartBlink()
     }
 
     func hideSwitcher() {

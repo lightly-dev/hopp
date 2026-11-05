@@ -287,10 +287,8 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
         let screen = NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) }
             ?? NSScreen.main ?? NSScreen.screens.first
         if let area = screen?.visibleFrame {
-            let width = min(720, area.width - 48)
-            let height = min(sheetHeaderHeight + 8 * sheetRowHeight + 12 + sheetFooterHeight, area.height - 80)
-            setFrame(NSRect(x: area.midX - width / 2, y: area.maxY - area.height * 0.22 - height,
-                            width: width, height: height), display: false)
+            setFrame(sheetFrame(in: area, contentHeight: sheetHeaderHeight + 8 * sheetRowHeight + 12 + sheetFooterHeight),
+                     display: false)
         }
         filter()
         makeKeyAndOrderFront(nil)
