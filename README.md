@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/screenshot.jpg" alt="The Hopp window switcher listing individual windows from Safari, Notes, Finder, Terminal, Mail, Calendar and Preview">
+  <img src="assets/screenshot.png" alt="The Hopp window switcher listing individual windows from Safari, Notes, Finder, Terminal, Mail, Calendar and Preview">
 </p>
 
 ## Why Hopp
