@@ -42,6 +42,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.launcher.update(apps: self.appCatalog.apps)
         }
         appCatalog.refresh()
+        launcher.prepare()
         if !windowService.hasAccessibility { showSettings() }
     }
 
@@ -87,6 +88,15 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 }
             }
         }
+            .store(in: &cancellables)
+        // App icons can change with the appearance; redraw them before the launcher next opens.
+        NSApp.publisher(for: \.effectiveAppearance)
+            .sink { [weak self] _ in
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    AppIconCache.shared.warm(self.appCatalog.apps.map(\.path))
+                }
+            }
             .store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
             .sink { [weak self] _ in self?.rebuildPanels() }

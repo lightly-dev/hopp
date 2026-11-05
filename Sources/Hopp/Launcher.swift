@@ -1,6 +1,88 @@
 import AppKit
 import HoppCore
 
+/// App icons drawn ahead of time off the main thread. The first draw of an `NSWorkspace` icon
+/// reads and decodes its .icns file, which for a screen of launcher rows blocks for about a second.
+@MainActor
+final class AppIconCache {
+    static let shared = AppIconCache()
+    nonisolated static let pointSize: CGFloat = 24
+
+    private var images: [String: NSImage] = [:]
+    private var pending = Set<String>()
+
+    private static func key(_ path: String, _ appearance: NSAppearance.Name) -> String {
+        appearance.rawValue + "|" + path
+    }
+
+    /// App icons can differ between light and dark, so images are kept per appearance.
+    private static var currentAppearance: NSAppearance.Name {
+        NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) ?? .aqua
+    }
+
+    /// The pre-drawn icon, or a plain workspace icon when it is not ready yet.
+    func icon(for path: String) -> NSImage {
+        if let image = images[Self.key(path, Self.currentAppearance)] { return image }
+        let icon = NSWorkspace.shared.icon(forFile: path)
+        icon.size = NSSize(width: Self.pointSize, height: Self.pointSize)
+        return icon
+    }
+
+    /// Draws the icons missing for the current appearance in the background.
+    func warm(_ paths: [String]) {
+        let appearance = Self.currentAppearance
+        let missing = Array(Set(paths)).filter {
+            let key = Self.key($0, appearance)
+            return images[key] == nil && !pending.contains(key)
+        }
+        guard !missing.isEmpty else { return }
+        missing.forEach { pending.insert(Self.key($0, appearance)) }
+        let scale = NSScreen.screens.map(\.backingScaleFactor).max() ?? 2
+        Task { [weak self] in
+            let rendered = await Task.detached(priority: .utility) {
+                AppIconCache.render(missing, appearance: appearance, scale: scale)
+            }.value
+            guard let self else { return }
+            let size = NSSize(width: Self.pointSize, height: Self.pointSize)
+            for (path, image) in rendered {
+                self.images[Self.key(path, appearance)] = NSImage(cgImage: image, size: size)
+            }
+            missing.forEach { self.pending.remove(Self.key($0, appearance)) }
+        }
+    }
+
+    nonisolated private static func render(_ paths: [String], appearance: NSAppearance.Name,
+                                           scale: CGFloat) -> [(String, CGImage)] {
+        let lock = NSLock()
+        var results: [(String, CGImage)] = []
+        DispatchQueue.concurrentPerform(iterations: paths.count) { index in
+            guard let image = render(paths[index], appearance: appearance, scale: scale) else { return }
+            lock.lock()
+            results.append((paths[index], image))
+            lock.unlock()
+        }
+        return results
+    }
+
+    nonisolated private static func render(_ path: String, appearance: NSAppearance.Name, scale: CGFloat) -> CGImage? {
+        let pixels = Int((pointSize * scale).rounded())
+        guard let drawingAppearance = NSAppearance(named: appearance),
+              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
+                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
+              let context = NSGraphicsContext(bitmapImageRep: rep) else { return nil }
+        rep.size = NSSize(width: pointSize, height: pointSize)
+        let icon = NSWorkspace.shared.icon(forFile: path)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        drawingAppearance.performAsCurrentDrawingAppearance {
+            icon.draw(in: NSRect(x: 0, y: 0, width: pointSize, height: pointSize))
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        return rep.cgImage
+    }
+}
+
 @MainActor
 final class AppCatalog {
     private(set) var apps: [AppEntry] = []
@@ -14,6 +96,7 @@ final class AppCatalog {
             let apps = await Task.detached(priority: .userInitiated) { AppCatalog.scan() }.value
             guard let self else { return }
             self.isScanning = false
+            AppIconCache.shared.warm(apps.map(\.path))
             guard apps != self.apps else { return }
             self.apps = apps
             self.onChange?()
@@ -63,6 +146,8 @@ final class AppCatalog {
 @MainActor
 final class LauncherPanel: NSPanel, NSTextFieldDelegate {
     private static let maxRows = 60
+    /// Rows built before the sheet appears; about eight fit, the rest follow on the next run loop turn.
+    private static let initialRows = 10
     private let field = NSTextField()
     private let countLabel = NSTextField(labelWithString: "")
     private let actionLabel = NSTextField(labelWithString: "")
@@ -76,6 +161,7 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
     private var selectedIndex = 0
     private var language: AppLanguage = .system
     private var hoverOrigin = NSEvent.mouseLocation
+    private var renderGeneration = 0
 
     init(onLaunch: @escaping (AppEntry) -> Void, onDismiss: @escaping () -> Void) {
         self.onLaunch = onLaunch
@@ -163,6 +249,19 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
 
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
+
+    /// Shows the sheet once, invisibly, so the first real open does not pay for creating the window
+    /// and its glass background.
+    func prepare() {
+        guard !isVisible else { return }
+        alphaValue = 0
+        setFrame(NSRect(x: -10_000, y: -10_000, width: 720, height: 400), display: false)
+        filter()
+        orderFrontRegardless()
+        displayIfNeeded()
+        orderOut(nil)
+        alphaValue = 1
+    }
 
     func show(apps: [AppEntry], language: AppLanguage) {
         self.apps = apps
@@ -253,34 +352,55 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
     private var rows: [LauncherRow] { stack.arrangedSubviews.compactMap { $0 as? LauncherRow } }
 
     private func render() {
+        renderGeneration += 1
+        let generation = renderGeneration
         let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleURL?.standardizedFileURL.path })
         stack.arrangedSubviews.forEach {
             stack.removeArrangedSubview($0)
             $0.removeFromSuperview()
         }
-        for (index, match) in results.prefix(Self.maxRows).enumerated() {
-            let detail = running.contains(URL(fileURLWithPath: match.app.path).standardizedFileURL.path)
-                ? L10n.text("Running", language: language) : match.app.alternateName
-            let row = LauncherRow(
-                match: match, detail: detail,
-                onPointerMove: { [weak self] pointer in
-                    guard let self, pointer != self.hoverOrigin else { return }
-                    self.hoverOrigin = pointer
-                    self.selectedIndex = index
-                    self.updateSelection()
-                },
-                action: { [weak self] in
-                    self?.selectedIndex = index
-                    self?.launchSelected()
-                }
-            )
-            stack.addArrangedSubview(row)
-            row.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -16).isActive = true
-        }
+        let shown = Array(results.prefix(Self.maxRows).enumerated())
+        shown.prefix(Self.initialRows).forEach { addRow($0.element, at: $0.offset, running: running) }
         updateSelection()
         countLabel.stringValue = L10n.format("%@ apps", String(results.count), language: language)
         emptyLabel.isHidden = !results.isEmpty
         contentView?.layoutSubtreeIfNeeded()
+        resizeStack()
+        guard shown.count > Self.initialRows else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.renderGeneration == generation else { return }
+            shown.dropFirst(Self.initialRows).forEach { self.addRow($0.element, at: $0.offset, running: running) }
+            self.updateSelection()
+            self.stack.layoutSubtreeIfNeeded()
+            self.resizeStack()
+            // The selection may have moved past the first rows before they were all built.
+            if self.selectedIndex >= Self.initialRows, let row = self.rows.first(where: \.isCurrent) {
+                row.scrollToVisible(row.bounds)
+            }
+        }
+    }
+
+    private func addRow(_ match: AppSearch.Match, at index: Int, running: Set<String>) {
+        let detail = running.contains(URL(fileURLWithPath: match.app.path).standardizedFileURL.path)
+            ? L10n.text("Running", language: language) : match.app.alternateName
+        let row = LauncherRow(
+            match: match, detail: detail,
+            onPointerMove: { [weak self] pointer in
+                guard let self, pointer != self.hoverOrigin else { return }
+                self.hoverOrigin = pointer
+                self.selectedIndex = index
+                self.updateSelection()
+            },
+            action: { [weak self] in
+                self?.selectedIndex = index
+                self?.launchSelected()
+            }
+        )
+        stack.addArrangedSubview(row)
+        row.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -16).isActive = true
+    }
+
+    private func resizeStack() {
         stack.setFrameSize(NSSize(width: max(scroll.contentSize.width, 1),
                                   height: max(stack.fittingSize.height, scroll.contentSize.height)))
     }
@@ -346,9 +466,7 @@ private final class LauncherRow: NSButton {
         wantsLayer = true
         layer?.cornerRadius = sheetRowCornerRadius
         layer?.cornerCurve = .continuous
-        let icon = NSWorkspace.shared.icon(forFile: match.app.path)
-        icon.size = NSSize(width: 24, height: 24)
-        let iconView = NSImageView(image: icon)
+        let iconView = NSImageView(image: AppIconCache.shared.icon(for: match.app.path))
         nameLabel.font = .systemFont(ofSize: 14)
         nameLabel.lineBreakMode = .byTruncatingTail
         nameLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
