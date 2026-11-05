@@ -38,6 +38,10 @@ if [[ ! -f assets/AppIcon.icns ]]; then
     echo "App icon is missing: assets/AppIcon.icns" >&2
     exit 1
 fi
+if [[ ! -f assets/AppIcon.icon/icon.json ]]; then
+    echo "App icon is missing: assets/AppIcon.icon" >&2
+    exit 1
+fi
 if [[ "$signing_mode" == adhoc ]]; then
     if [[ -n "$requested_identity" && "$requested_identity" != "-" ]]; then
         echo "SIGNING_MODE=adhoc only accepts CODE_SIGN_IDENTITY=-" >&2
@@ -155,6 +159,21 @@ fi
 ditto "$resource_source_dir/Hopp_Hopp.bundle" \
     "$app/Contents/Resources/Hopp_Hopp.bundle"
 
+# macOS 26 and later draw the Icon Composer icon from Assets.car (CFBundleIconName);
+# earlier systems use the full-size AppIcon.icns (CFBundleIconFile).
+icon_dir="$work_dir/icon"
+mkdir -p "$icon_dir"
+xcrun actool assets/AppIcon.icon --compile "$icon_dir" \
+    --app-icon AppIcon --include-all-app-icons \
+    --output-partial-info-plist "$icon_dir/partial.plist" \
+    --development-region en --target-device mac --platform macosx \
+    --minimum-deployment-target 13.0 \
+    --errors --output-format human-readable-text >/dev/null
+if [[ ! -f "$icon_dir/Assets.car" ]]; then
+    echo "actool did not produce Assets.car from assets/AppIcon.icon" >&2
+    exit 1
+fi
+cp "$icon_dir/Assets.car" "$app/Contents/Resources/Assets.car"
 cp assets/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -165,6 +184,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
     <key>CFBundleName</key><string>Hopp</string>
     <key>CFBundleDisplayName</key><string>Hopp</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>CFBundleIconName</key><string>AppIcon</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>$version</string>
     <key>CFBundleVersion</key><string>$build_number</string>
