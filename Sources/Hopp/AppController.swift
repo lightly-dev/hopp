@@ -277,11 +277,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func configureMenuBar() {
-        let item = statusItem ?? NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        let image = NSImage(systemSymbolName: "rectangle.stack", accessibilityDescription: "Hopp")
-        image?.size = NSSize(width: 18, height: 18)
-        image?.isTemplate = true
-        item.button?.image = image
+        let item = statusItem ?? NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.button?.image = MenuBarIcon.image()
         item.button?.setAccessibilityLabel("Hopp")
         let menu = NSMenu()
         menu.addItem(withTitle: L10n.text("App launcher", language: settings.language), action: #selector(toggleLauncher), keyEquivalent: "").target = self
