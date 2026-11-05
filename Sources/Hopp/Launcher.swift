@@ -64,14 +64,17 @@ final class AppIconCache {
         return results
     }
 
-    nonisolated private static func render(_ path: String, appearance: NSAppearance.Name, scale: CGFloat) -> CGImage? {
+    nonisolated fileprivate static func render(_ path: String, appearance: NSAppearance.Name, scale: CGFloat) -> CGImage? {
         let pixels = Int((pointSize * scale).rounded())
         guard let drawingAppearance = NSAppearance(named: appearance),
               let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
                                          bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
-              let context = NSGraphicsContext(bitmapImageRep: rep) else { return nil }
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
+        else { return nil }
+        // Set the point size before creating the context, which takes its scale from it;
+        // otherwise the icon is drawn into a quarter of the pixels.
         rep.size = NSSize(width: pointSize, height: pointSize)
+        guard let context = NSGraphicsContext(bitmapImageRep: rep) else { return nil }
         let icon = NSWorkspace.shared.icon(forFile: path)
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.current = context
@@ -80,6 +83,16 @@ final class AppIconCache {
         }
         NSGraphicsContext.restoreGraphicsState()
         return rep.cgImage
+    }
+}
+
+extension AppIconCache {
+    /// A drawn icon must fill its whole bitmap, not only the bottom-left quarter.
+    nonisolated static func renderSelfCheck() -> Bool {
+        guard let image = render("/System/Library/CoreServices/Finder.app", appearance: .aqua, scale: 2)
+        else { return false }
+        let rep = NSBitmapImageRep(cgImage: image)
+        return rep.pixelsWide == 48 && (rep.colorAt(x: 36, y: 12)?.alphaComponent ?? 0) > 0.5
     }
 }
 
@@ -410,6 +423,7 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
     }
 
     static func smokeCheck() -> Bool {
+        guard AppIconCache.renderSelfCheck() else { return false }
         let apps = [
             AppEntry(path: "/Applications/Safari.app", name: "Safari"),
             AppEntry(path: "/System/Applications/Calculator.app", name: "计算器", alternateName: "Calculator"),
