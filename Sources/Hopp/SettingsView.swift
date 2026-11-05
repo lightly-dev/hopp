@@ -2,9 +2,38 @@ import AppKit
 import HoppCore
 import SwiftUI
 
+enum AppAppearance: String, CaseIterable, Identifiable {
+    case system, light, dark
+
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .light: "Light"
+        case .dark: "Dark"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .system: "circle.lefthalf.filled"
+        case .light: "sun.max"
+        case .dark: "moon"
+        }
+    }
+    /// `nil` follows the system appearance.
+    var nsAppearance: NSAppearance? {
+        switch self {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        }
+    }
+}
+
 @MainActor
 final class AppSettings: ObservableObject {
     @Published private(set) var language: AppLanguage
+    @Published private(set) var appearance: AppAppearance
     @Published private(set) var allWindowsShortcut: KeyboardShortcut
     @Published private(set) var currentAppShortcut: KeyboardShortcut
     @Published private(set) var launcherShortcut: KeyboardShortcut
@@ -33,6 +62,12 @@ final class AppSettings: ObservableObject {
         currentAppShortcut = conflict ? .currentApp : currentApp
         launcherShortcut = conflict ? .launcher : launcher
         language = AppLanguage(rawValue: defaults.string(forKey: "language") ?? "") ?? .system
+        appearance = AppAppearance(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
+    }
+
+    func setAppearance(_ appearance: AppAppearance) {
+        self.appearance = appearance
+        defaults.set(appearance.rawValue, forKey: "appearance")
     }
 
     func setLanguage(_ language: AppLanguage) {
@@ -104,6 +139,11 @@ final class AppSettings: ObservableObject {
         guard AppSettings(defaults: defaults).keepSwitcherOpen else { return false }
         initial.setKeepSwitcherOpen(false)
         guard !AppSettings(defaults: defaults).keepSwitcherOpen else { return false }
+        guard initial.appearance == .system else { return false }
+        initial.setAppearance(.dark)
+        guard AppSettings(defaults: defaults).appearance == .dark else { return false }
+        defaults.set("unsupported", forKey: "appearance")
+        guard AppSettings(defaults: defaults).appearance == .system else { return false }
         let settings = AppSettings(defaults: defaults)
         settings.setLanguage(.ja)
         guard AppSettings(defaults: defaults).language == .ja,
@@ -136,155 +176,184 @@ final class AppSettings: ObservableObject {
     }
 }
 
-private enum SettingsPage: String, CaseIterable, Identifiable {
-    case general = "General"
-    case shortcuts = "Shortcuts"
-
-    var id: String { rawValue }
-    var symbol: String {
-        switch self {
-        case .general: "slider.horizontal.3"
-        case .shortcuts: "keyboard"
-        }
-    }
-}
-
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var windowService: WindowService
     @ObservedObject var shortcuts: ShortcutController
-    @State private var page: SettingsPage = .general
 
     private var language: AppLanguage { settings.language }
+    private func t(_ key: String) -> String { L10n.text(key, language: language) }
 
     var body: some View {
-        HStack(spacing: 0) {
-            List(selection: $page) {
-                navigationItem(.general)
-                navigationItem(.shortcuts)
-            }
-            .listStyle(.sidebar)
-            .frame(width: 170)
-            Divider()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 26) {
-                    switch page {
-                    case .general: generalSettings
-                    case .shortcuts: shortcutSettings
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                card {
+                    row(t("Language")) {
+                        Picker(t("Language"), selection: Binding(get: { settings.language }, set: settings.setLanguage)) {
+                            ForEach(AppLanguage.allCases) { option in
+                                Text(option == .system ? t("System") : option.name).tag(option)
+                            }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                    }
+                    divider
+                    row(t("Theme")) {
+                        Picker(t("Theme"), selection: Binding(get: { settings.appearance }, set: settings.setAppearance)) {
+                            ForEach(AppAppearance.allCases) { option in
+                                Label(t(option.title), systemImage: option.symbol).tag(option)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .fixedSize()
+                    }
+                    divider
+                    row(t("Accessibility")) {
+                        status(windowService.hasAccessibility, on: "Granted", off: "Not granted")
+                        if !windowService.hasAccessibility {
+                            Button(t("Request access")) { windowService.requestAccessibility() }
+                        }
+                    }
+                    divider
+                    row(t("Global shortcuts")) {
+                        status(shortcuts.isRunning, on: "Running", off: "Not running")
+                        if windowService.hasAccessibility && !shortcuts.isRunning {
+                            Button(t("Retry")) { _ = shortcuts.start() }
+                        }
                     }
                 }
-                .padding(30)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+
+                sectionHeader(t("Window switcher"))
+                card {
+                    toggleRow("Only show windows on the current display",
+                              "With multiple displays, list only windows on the display under the pointer.",
+                              get: settings.showWindowsFromCurrentDisplayOnly,
+                              set: settings.setShowWindowsFromCurrentDisplayOnly)
+                    divider
+                    toggleRow("Show windows from all desktops",
+                              "The current desktop comes first in recent order. Other desktops stay grouped in a stable order.",
+                              get: settings.showWindowsFromAllDesktops,
+                              set: settings.setShowWindowsFromAllDesktops)
+                    divider
+                    toggleRow("Keep switcher open after releasing modifiers",
+                              "Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close.",
+                              get: settings.keepSwitcherOpen,
+                              set: settings.setKeepSwitcherOpen)
+                }
+
+                sectionHeader(t("Shortcuts"))
+                card {
+                    ForEach(Array(ShortcutTarget.allCases.enumerated()), id: \.element) { index, target in
+                        if index > 0 { divider }
+                        row(t(target.title)) { shortcutButton(target: target) }
+                    }
+                    divider
+                    row(t("Restore defaults"), subtitle: t("Click a shortcut to record. Esc cancels; Shift switches backward.")) {
+                        Button {
+                            shortcuts.cancelRecording()
+                            settings.resetShortcuts()
+                        } label: {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 13, weight: .semibold))
+                                .frame(width: 30, height: 26)
+                                .background(RoundedRectangle(cornerRadius: 7).fill(Color.primary.opacity(0.08)))
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help(t("Restore defaults"))
+                        .accessibilityLabel(t("Restore defaults"))
+                    }
+                }
+                if let error = shortcuts.recordingErrorKey {
+                    Text(t(error))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                }
             }
-            .background(Color(nsColor: .windowBackgroundColor))
+            .padding(20)
         }
+        .background(Color(nsColor: .windowBackgroundColor))
         .font(.system(size: 13))
         .tint(Color(nsColor: appAccentColor))
-        .frame(width: 840, height: 600)
-        .onChange(of: page) { _ in shortcuts.cancelRecording() }
+        .frame(width: 560, height: 710)
         .onDisappear { shortcuts.cancelRecording() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
             shortcuts.cancelRecording()
         }
     }
 
-    private func navigationItem(_ destination: SettingsPage) -> some View {
-        Label(L10n.text(destination.rawValue, language: language), systemImage: destination.symbol)
-            .font(.system(size: 14))
-            .padding(.vertical, 5)
-            .tag(destination)
+    // MARK: - Building blocks
+
+    private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .padding(.horizontal, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.primary.opacity(0.035))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06))
+            )
     }
 
-    private func settingsRow<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 16) {
-            Text(L10n.text(title, language: language) + ":")
-                .multilineTextAlignment(.trailing)
-                .frame(width: 130, alignment: .trailing)
-            content()
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
+    private var divider: some View {
+        Rectangle().fill(Color.primary.opacity(0.08)).frame(height: 1)
     }
 
-    private var generalSettings: some View {
-        Group {
-            settingsRow("Window switcher") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Toggle(L10n.text("Only show windows on the current display", language: language), isOn: Binding(
-                        get: { settings.showWindowsFromCurrentDisplayOnly },
-                        set: settings.setShowWindowsFromCurrentDisplayOnly
-                    ))
-                    Text(L10n.text("With multiple displays, list only windows on the display under the pointer.", language: language))
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 13, weight: .semibold))
+            .padding(.horizontal, 16)
+            .padding(.top, 22)
+            .padding(.bottom, 8)
+    }
+
+    private func row<Trailing: View>(_ title: String, subtitle: String? = nil,
+                                     @ViewBuilder trailing: () -> Trailing) -> some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
-                    Toggle(L10n.text("Show windows from all desktops", language: language), isOn: Binding(
-                        get: { settings.showWindowsFromAllDesktops }, set: settings.setShowWindowsFromAllDesktops
-                    ))
-                    Text(L10n.text("The current desktop comes first in recent order. Other desktops stay grouped in a stable order.", language: language))
-                        .foregroundStyle(.secondary)
-                    Toggle(L10n.text("Keep switcher open after releasing modifiers", language: language), isOn: Binding(
-                        get: { settings.keepSwitcherOpen }, set: settings.setKeepSwitcherOpen
-                    ))
-                    Text(L10n.text("Type to search without holding the modifier. Press Return to switch; press Esc or click outside to close.", language: language))
-                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .toggleStyle(.checkbox)
             }
-            settingsRow("Language") {
-                Picker(L10n.text("Language", language: language), selection: Binding(
-                    get: { settings.language }, set: settings.setLanguage
-                )) {
-                    ForEach(AppLanguage.allCases) { option in
-                        Text(option == .system ? L10n.text("System", language: language) : option.name).tag(option)
-                    }
-                }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 8) { trailing() }
+        }
+        .padding(.vertical, 10)
+        .frame(minHeight: 44)
+    }
+
+    private func toggleRow(_ title: String, _ subtitle: String, get: Bool,
+                           set: @escaping (Bool) -> Void) -> some View {
+        row(t(title), subtitle: t(subtitle)) {
+            Toggle(t(title), isOn: Binding(get: { get }, set: set))
+                .toggleStyle(.switch)
                 .labelsHidden()
-                .frame(width: 200)
-            }
-            settingsRow("Accessibility") {
-                HStack {
-                    Text(L10n.text(windowService.hasAccessibility ? "Granted" : "Not granted", language: language))
-                    if !windowService.hasAccessibility {
-                        Button(L10n.text("Request access", language: language)) { windowService.requestAccessibility() }
-                    }
-                }
-            }
-            settingsRow("Global shortcuts") {
-                HStack {
-                    Text(L10n.text(shortcuts.isRunning ? "Running" : "Not running", language: language))
-                    if windowService.hasAccessibility && !shortcuts.isRunning {
-                        Button(L10n.text("Retry", language: language)) { _ = shortcuts.start() }
-                    }
-                }
-            }
         }
     }
 
-    private var shortcutSettings: some View {
-        Group {
-            ForEach(ShortcutTarget.allCases, id: \.self) { target in
-                settingsRow(target.title) {
-                    shortcutButton(target: target)
-                }
-            }
-            settingsRow("Shortcuts") {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(L10n.text("Click a shortcut to record. Esc cancels; Shift switches backward.", language: language))
-                        .foregroundStyle(.secondary)
-                    Button(L10n.text("Restore defaults", language: language)) {
-                        shortcuts.cancelRecording()
-                        settings.resetShortcuts()
-                    }
-                    if let error = shortcuts.recordingErrorKey {
-                        Text(L10n.text(error, language: language)).foregroundStyle(.red)
-                    }
-                }
-            }
+    private func status(_ ok: Bool, on: String, off: String) -> some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(ok ? Color.green : Color.orange)
+                .frame(width: 7, height: 7)
+            Text(t(ok ? on : off)).foregroundStyle(.secondary)
         }
     }
 
     private func shortcutButton(target: ShortcutTarget) -> some View {
         let recording = shortcuts.recordingTarget == target
         let display = settings.shortcut(for: target).display
-        return Button(recording ? L10n.text("Press shortcut…", language: language) : display) {
+        let accent = Color(nsColor: appAccentColor)
+        return Button {
             if recording {
                 shortcuts.cancelRecording()
             } else {
@@ -292,8 +361,24 @@ struct SettingsView: View {
                     settings.setShortcut(shortcut, target: target)
                 }
             }
+        } label: {
+            Text(recording ? t("Press shortcut…") : display)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(recording ? accent : .primary)
+                .padding(.horizontal, 12)
+                .frame(minWidth: 90, minHeight: 26)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(recording ? accent.opacity(0.12) : Color.primary.opacity(0.08))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(recording ? accent : .clear, lineWidth: 1)
+                )
+                .contentShape(Rectangle())
         }
-        .accessibilityLabel(L10n.text(target.title, language: language))
-        .accessibilityValue(recording ? L10n.text("Press shortcut…", language: language) : display)
+        .buttonStyle(.plain)
+        .accessibilityLabel(t(target.title))
+        .accessibilityValue(recording ? t("Press shortcut…") : display)
     }
 }

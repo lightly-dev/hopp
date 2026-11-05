@@ -44,3 +44,6 @@
 "With multiple displays, list only windows on the display under the pointer." = "With multiple displays, list only windows on the display under the pointer.";
 "Switch to Window" = "Switch to Window";
 "Open App" = "Open App";
+"Theme" = "Theme";
+"Light" = "Light";
+"Dark" = "Dark";

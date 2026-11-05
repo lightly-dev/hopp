@@ -44,3 +44,6 @@
 "With multiple displays, list only windows on the display under the pointer." = "Con varias pantallas, muestra solo las ventanas de la pantalla donde está el puntero.";
 "Switch to Window" = "Cambiar a la ventana";
 "Open App" = "Abrir app";
+"Theme" = "Tema";
+"Light" = "Claro";
+"Dark" = "Oscuro";

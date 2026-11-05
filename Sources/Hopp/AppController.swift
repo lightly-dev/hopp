@@ -30,6 +30,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        NSApp.appearance = settings.appearance.nsAppearance
         configureMenuBar()
         configureShortcuts()
         observeState()
@@ -80,6 +81,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
                                              launcher: self.settings.launcherShortcut)
                     self.shortcuts.keepsSwitcherOpen = self.settings.keepSwitcherOpen
                     self.windowService.setIncludeAllSpaces(self.settings.showWindowsFromAllDesktops)
+                    NSApp.appearance = self.settings.appearance.nsAppearance
                     self.settingsWindow?.title = L10n.text("Hopp Settings", language: self.settings.language)
                     if self.currentAppOnly != nil { self.refreshVisibleSwitcher() }
                 }

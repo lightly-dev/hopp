@@ -44,3 +44,6 @@
 "With multiple displays, list only windows on the display under the pointer." = "连接多个显示器时，只列出鼠标指针所在显示器上的窗口。";
 "Switch to Window" = "切换到窗口";
 "Open App" = "打开应用";
+"Theme" = "主题";
+"Light" = "浅色";
+"Dark" = "深色";
