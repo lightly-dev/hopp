@@ -10,8 +10,8 @@
 "Running" = "运行中";
 "Not running" = "未运行";
 "Retry" = "重试";
-"Settings…" = "设置…";
-"Grant Accessibility Access…" = "授予辅助功能权限…";
+"Settings" = "设置";
+"Grant Accessibility Access" = "授予辅助功能权限";
 "Quit Hopp" = "退出 Hopp";
 "Hopp Settings" = "Hopp 设置";
 "Press shortcut…" = "请按快捷键…";
@@ -47,3 +47,4 @@
 "Theme" = "主题";
 "Light" = "浅色";
 "Dark" = "深色";
+"Version %@" = "版本 %@";

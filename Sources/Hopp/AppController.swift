@@ -281,9 +281,8 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         item.button?.image = MenuBarIcon.image()
         item.button?.setAccessibilityLabel("Hopp")
         let menu = NSMenu()
-        menu.addItem(withTitle: L10n.text("App launcher", language: settings.language), action: #selector(toggleLauncher), keyEquivalent: "").target = self
-        menu.addItem(withTitle: L10n.text("Settings…", language: settings.language), action: #selector(showSettings), keyEquivalent: ",").target = self
-        menu.addItem(withTitle: L10n.text("Grant Accessibility Access…", language: settings.language), action: #selector(requestAccessibility), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.text("Settings", language: settings.language), action: #selector(showSettings), keyEquivalent: ",").target = self
+        menu.addItem(withTitle: L10n.text("Grant Accessibility Access", language: settings.language), action: #selector(requestAccessibility), keyEquivalent: "")
             .target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: L10n.text("Quit Hopp", language: settings.language), action: #selector(quit), keyEquivalent: "q").target = self

@@ -10,8 +10,8 @@
 "Running" = "実行中";
 "Not running" = "停止中";
 "Retry" = "再試行";
-"Settings…" = "設定…";
-"Grant Accessibility Access…" = "アクセシビリティを許可…";
+"Settings" = "設定";
+"Grant Accessibility Access" = "アクセシビリティを許可";
 "Quit Hopp" = "Hopp を終了";
 "Hopp Settings" = "Hopp の設定";
 "Press shortcut…" = "ショートカットを押す…";
@@ -47,3 +47,4 @@
 "Theme" = "テーマ";
 "Light" = "ライト";
 "Dark" = "ダーク";
+"Version %@" = "バージョン %@";

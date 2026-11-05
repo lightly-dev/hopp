@@ -10,8 +10,8 @@
 "Running" = "En cours";
 "Not running" = "À l’arrêt";
 "Retry" = "Réessayer";
-"Settings…" = "Réglages…";
-"Grant Accessibility Access…" = "Autoriser l’accès à l’accessibilité…";
+"Settings" = "Réglages";
+"Grant Accessibility Access" = "Autoriser l’accès à l’accessibilité";
 "Quit Hopp" = "Quitter Hopp";
 "Hopp Settings" = "Réglages d’Hopp";
 "Press shortcut…" = "Appuyez sur le raccourci…";
@@ -47,3 +47,4 @@
 "Theme" = "Thème";
 "Light" = "Clair";
 "Dark" = "Sombre";
+"Version %@" = "Version %@";

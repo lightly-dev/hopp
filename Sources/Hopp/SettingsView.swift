@@ -272,17 +272,31 @@ struct SettingsView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 8)
                 }
+                Text(versionText)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 22)
             }
             .padding(20)
         }
         .background(Color(nsColor: .windowBackgroundColor))
         .font(.system(size: 13))
         .tint(Color(nsColor: appAccentColor))
-        .frame(width: 560, height: 710)
+        .frame(width: 560, height: 750)
         .onDisappear { shortcuts.cancelRecording() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
             shortcuts.cancelRecording()
         }
+    }
+
+    /// "Version 0.2.10 (57)" from the app bundle; a plain `swift build` has no version to show.
+    private var versionText: String {
+        let info = Bundle.main.infoDictionary
+        guard let version = info?["CFBundleShortVersionString"] as? String else { return "Hopp" }
+        let build = (info?["CFBundleVersion"] as? String).map { " (\($0))" } ?? ""
+        return "Hopp " + L10n.format("Version %@", version + build, language: language)
     }
 
     // MARK: - Building blocks
