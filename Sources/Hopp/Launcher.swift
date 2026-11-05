@@ -323,6 +323,29 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
 
     override func cancelOperation(_ sender: Any?) { dismiss() }
 
+    /// Like the switcher, search typing skips the input method: plain keys are turned into
+    /// characters with the keyboard layout and written into the field directly, so the launcher
+    /// searches in English even while a Chinese or Japanese input method is active.
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown, typeIntoSearch(event) { return }
+        super.sendEvent(event)
+    }
+
+    private func typeIntoSearch(_ event: NSEvent) -> Bool {
+        // Command, Control and Option shortcuts (paste, select all…) keep their usual handling.
+        guard event.modifierFlags.intersection([.command, .control, .option]).isEmpty,
+              let editor = field.currentEditor() as? NSTextView else { return false }
+        if event.keyCode == 51 {
+            editor.deleteBackward(nil)
+            return true
+        }
+        guard let characters = event.characters(byApplyingModifiers: event.modifierFlags.intersection([.shift, .capsLock])),
+              !characters.isEmpty,
+              characters.unicodeScalars.allSatisfy({ (32...126).contains($0.value) }) else { return false }
+        editor.insertText(characters, replacementRange: editor.selectedRange())
+        return true
+    }
+
     func controlTextDidChange(_ notification: Notification) { filter() }
 
     func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
@@ -438,8 +461,14 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
               panel.rows.map(\.isCurrent) == [true, false, false] else { return false }
         panel.move(by: -1)
         guard panel.rows.map(\.isCurrent) == [false, false, true] else { return false }
-        panel.field.stringValue = "jisuan"
-        panel.filter()
+        for (character, keyCode) in [("j", 38), ("i", 34), ("s", 1), ("u", 32), ("a", 0), ("n", 45)] {
+            guard let key = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [], timestamp: 0,
+                                             windowNumber: panel.windowNumber, context: nil, characters: character,
+                                             charactersIgnoringModifiers: character, isARepeat: false,
+                                             keyCode: UInt16(keyCode)) else { return false }
+            panel.sendEvent(key)
+        }
+        guard panel.field.stringValue == "jisuan" else { return false }
         guard panel.rows.count == 1, panel.selectedIndex == 0 else { return false }
         panel.field.stringValue = "zzz"
         panel.filter()
