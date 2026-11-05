@@ -92,7 +92,7 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
 
-        let background = makeSheetBackground()
+        let (root, background) = makeSheetBackground()
 
         let searchIcon = NSImageView()
         searchIcon.image = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
@@ -157,7 +157,7 @@ final class LauncherPanel: NSPanel, NSTextFieldDelegate {
             emptyLabel.centerYAnchor.constraint(equalTo: scroll.centerYAnchor),
             stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor)
         ])
-        contentView = background
+        contentView = root
         acceptsMouseMovedEvents = true
     }
 
@@ -344,7 +344,8 @@ private final class LauncherRow: NSButton {
         title = ""
         isBordered = false
         wantsLayer = true
-        layer?.cornerRadius = 8
+        layer?.cornerRadius = sheetRowCornerRadius
+        layer?.cornerCurve = .continuous
         let icon = NSWorkspace.shared.icon(forFile: match.app.path)
         icon.size = NSSize(width: 24, height: 24)
         let iconView = NSImageView(image: icon)
@@ -381,16 +382,21 @@ private final class LauncherRow: NSButton {
     required init?(coder: NSCoder) { nil }
 
     private func applyAppearance() {
-        layer?.backgroundColor = isCurrent ? sheetSelectionColor.cgColor : NSColor.clear.cgColor
+        layer?.backgroundColor = isCurrent ? resolvedCGColor(sheetSelectionColor) : NSColor.clear.cgColor
         let text = NSMutableAttributedString(string: nameLabel.stringValue, attributes: [
             .font: NSFont.systemFont(ofSize: 14),
             .foregroundColor: NSColor.labelColor
         ])
         for range in nameRanges {
-            text.addAttributes([.backgroundColor: NSColor(srgbRed: 1, green: 229 / 255, blue: 138 / 255, alpha: 1),
+            text.addAttributes([.backgroundColor: sheetMatchHighlightColor,
                                 .foregroundColor: NSColor.black], range: range)
         }
         nameLabel.attributedStringValue = text
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyAppearance()
     }
 
     override func updateTrackingAreas() {

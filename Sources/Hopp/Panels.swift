@@ -3,29 +3,61 @@ import HoppCore
 
 let appAccentColor = NSColor(srgbRed: 80 / 255, green: 151 / 255,
                             blue: 247 / 255, alpha: 1)
-// Shared look of the switcher and launcher sheets.
-let sheetSelectionColor = NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.07)
+// Shared look of the switcher and launcher sheets. Colours are semantic so they follow
+// light and dark appearance and Increase Contrast.
+let sheetSelectionColor = NSColor.quaternaryLabelColor
+let sheetMatchHighlightColor = NSColor.findHighlightColor
 let sheetRowHeight: CGFloat = 38
 let sheetHeaderHeight: CGFloat = 56
 let sheetFooterHeight: CGFloat = 44
+let sheetCornerRadius: CGFloat = 20
+/// Rows sit 8pt inside the sheet, so their corners stay concentric with it.
+let sheetRowCornerRadius = sheetCornerRadius - 8
 
-/// A light, rounded sheet background: system material lifted towards white.
+/// The sheet background: Liquid Glass on macOS 26 and later, the system material before.
+/// `root` becomes the window's content view; subviews go into `content`.
 @MainActor
-func makeSheetBackground() -> NSVisualEffectView {
+func makeSheetBackground() -> (root: NSView, content: NSView) {
+    if #available(macOS 26.0, *) {
+        let glass = NSGlassEffectView()
+        glass.cornerRadius = sheetCornerRadius
+        let content = NSView()
+        glass.contentView = content
+        // A key window's glass also tints the window's full rectangle; clip it to the sheet's shape
+        // so the corners stay transparent and the shadow follows the rounded outline.
+        let root = NSView()
+        root.wantsLayer = true
+        root.layer?.cornerRadius = sheetCornerRadius
+        root.layer?.cornerCurve = .continuous
+        root.layer?.masksToBounds = true
+        glass.translatesAutoresizingMaskIntoConstraints = false
+        root.addSubview(glass)
+        NSLayoutConstraint.activate([
+            glass.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            glass.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            glass.topAnchor.constraint(equalTo: root.topAnchor),
+            glass.bottomAnchor.constraint(equalTo: root.bottomAnchor)
+        ])
+        return (root, content)
+    }
     let background = NSVisualEffectView()
     background.material = .popover
     background.blendingMode = .behindWindow
     background.state = .active
-    background.appearance = NSAppearance(named: .aqua)
     background.wantsLayer = true
-    background.layer?.cornerRadius = 14
+    background.layer?.cornerRadius = sheetCornerRadius
+    background.layer?.cornerCurve = .continuous
     background.layer?.masksToBounds = true
-    let tint = NSView()
-    tint.wantsLayer = true
-    tint.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.6).cgColor
-    tint.autoresizingMask = [.width, .height]
-    background.addSubview(tint)
-    return background
+    return (background, background)
+}
+
+extension NSView {
+    /// Resolves a dynamic colour for this view's current light or dark appearance, for use on layers.
+    func resolvedCGColor(_ color: NSColor) -> CGColor {
+        var resolved = color.cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance { resolved = color.cgColor }
+        return resolved
+    }
 }
 
 @MainActor
@@ -59,7 +91,7 @@ final class SwitcherPanel: NSPanel {
         hasShadow = true
         hidesOnDeactivate = false
 
-        let background = makeSheetBackground()
+        let (root, background) = makeSheetBackground()
 
         let header = NSView()
         let searchIcon = NSImageView()
@@ -156,7 +188,7 @@ final class SwitcherPanel: NSPanel {
             scroll.bottomAnchor.constraint(equalTo: footer.topAnchor),
             stack.widthAnchor.constraint(equalTo: scroll.contentView.widthAnchor)
         ])
-        contentView = background
+        contentView = root
         acceptsMouseMovedEvents = true
     }
 
@@ -347,8 +379,9 @@ private final class SwitcherRow: NSButton {
         title = ""
         isBordered = false
         wantsLayer = true
-        layer?.cornerRadius = 8
-        layer?.backgroundColor = selected ? sheetSelectionColor.cgColor : NSColor.clear.cgColor
+        layer?.cornerRadius = sheetRowCornerRadius
+        layer?.cornerCurve = .continuous
+        applyFill()
         titleLabel.font = .systemFont(ofSize: 14)
         titleLabel.textColor = .labelColor
         titleLabel.lineBreakMode = .byTruncatingTail
@@ -358,8 +391,7 @@ private final class SwitcherRow: NSButton {
         for (label, ranges) in [(appLabel, match.appRanges), (titleLabel, match.titleRanges)] where !ranges.isEmpty {
             let text = NSMutableAttributedString(attributedString: label.attributedStringValue)
             for range in ranges {
-                text.addAttributes([.backgroundColor: NSColor(srgbRed: 1, green: 229 / 255,
-                                                              blue: 138 / 255, alpha: 1),
+                text.addAttributes([.backgroundColor: sheetMatchHighlightColor,
                                     .foregroundColor: NSColor.black], range: range)
             }
             label.attributedStringValue = text
@@ -392,6 +424,15 @@ private final class SwitcherRow: NSButton {
 
     required init?(coder: NSCoder) { nil }
 
+    private func applyFill() {
+        layer?.backgroundColor = selected ? resolvedCGColor(sheetSelectionColor) : NSColor.clear.cgColor
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyFill()
+    }
+
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
         if let trackingArea { removeTrackingArea(trackingArea) }
@@ -405,7 +446,7 @@ private final class SwitcherRow: NSButton {
     override func mouseEntered(with event: NSEvent) { selectUnderPointer(event) }
     override func mouseMoved(with event: NSEvent) { selectUnderPointer(event) }
 
-    fileprivate var smokeHighlighted: Bool { layer?.backgroundColor == sheetSelectionColor.cgColor }
+    fileprivate var smokeHighlighted: Bool { layer?.backgroundColor == resolvedCGColor(sheetSelectionColor) }
     fileprivate func smokePointerMove(_ pointer: NSPoint) { onPointerMove(pointer) }
 
     private func selectUnderPointer(_ event: NSEvent) {
@@ -428,20 +469,19 @@ private final class SwitcherRow: NSButton {
     }
 
     fileprivate var smokeSelectionAppearanceIsValid: Bool {
-        layer?.backgroundColor == (selected ? sheetSelectionColor : NSColor.clear).cgColor
+        layer?.backgroundColor == (selected ? resolvedCGColor(sheetSelectionColor) : NSColor.clear.cgColor)
             && titleLabel.textColor == .labelColor && appLabel.textColor == .secondaryLabelColor
     }
 
     fileprivate var smokeSearchHighlightsAreValid: Bool {
         var highlighted = false
         var valid = true
-        let yellow = NSColor(srgbRed: 1, green: 229 / 255, blue: 138 / 255, alpha: 1)
         for label in [appLabel, titleLabel] {
             let text = label.attributedStringValue
             text.enumerateAttributes(in: NSRange(location: 0, length: text.length)) { attributes, _, _ in
                 if let background = attributes[.backgroundColor] as? NSColor {
                     highlighted = true
-                    valid = valid && background == yellow && attributes[.foregroundColor] as? NSColor == .black
+                    valid = valid && background == sheetMatchHighlightColor && attributes[.foregroundColor] as? NSColor == .black
                         && attributes[.underlineStyle] == nil
                 } else {
                     valid = valid && attributes[.foregroundColor] as? NSColor
@@ -469,9 +509,9 @@ final class KeyCapView: NSView {
     init(label: String) {
         super.init(frame: .zero)
         wantsLayer = true
-        layer?.cornerRadius = 5
+        layer?.cornerRadius = 6
         layer?.borderWidth = 1
-        layer?.borderColor = NSColor.black.withAlphaComponent(0.15).cgColor
+        layer?.borderColor = resolvedCGColor(.separatorColor)
         let text = NSTextField(labelWithString: label)
         text.font = .systemFont(ofSize: 12, weight: .medium)
         text.textColor = .secondaryLabelColor
@@ -486,6 +526,11 @@ final class KeyCapView: NSView {
     }
 
     required init?(coder: NSCoder) { nil }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        layer?.borderColor = resolvedCGColor(.separatorColor)
+    }
 }
 
 @MainActor
