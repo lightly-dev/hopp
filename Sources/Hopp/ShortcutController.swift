@@ -6,7 +6,7 @@ struct KeyboardShortcut: Codable, Equatable {
     static let modifierMask: CGEventFlags = [.maskCommand, .maskControl, .maskAlternate]
     static let allWindows = KeyboardShortcut(keyCode: 48, modifiers: .maskCommand, keyLabel: "Tab")
     static let currentApp = KeyboardShortcut(keyCode: 50, modifiers: .maskCommand, keyLabel: "`")
-    static let launcher = KeyboardShortcut(keyCode: 49, modifiers: .maskAlternate, keyLabel: "Space")
+    static let launcher = KeyboardShortcut(keyCode: 49, modifiers: .maskCommand, keyLabel: "Space")
 
     let keyCode: UInt16
     let modifierRawValue: UInt64
@@ -395,12 +395,12 @@ final class ShortcutController: ObservableObject {
               controller.keyAction(keyCode: 50, flags: .maskCommand)
                 == .begin(currentAppOnly: true, reverse: false),
               controller.keyAction(keyCode: 53, flags: .maskCommand) == .cancel,
-              KeyboardShortcut.launcher.display == "⌥Space",
-              controller.keyAction(keyCode: 49, flags: .maskAlternate) == .toggleLauncher,
-              controller.keyAction(keyCode: 49, flags: .maskAlternate) == .toggleLauncher,
+              KeyboardShortcut.launcher.display == "⌘Space",
+              controller.keyAction(keyCode: 49, flags: .maskCommand) == .toggleLauncher,
+              controller.keyAction(keyCode: 49, flags: .maskCommand) == .toggleLauncher,
               controller.keyAction(keyCode: 49, flags: [.maskAlternate, .maskCommand]) == nil,
               controller.keyAction(keyCode: 48, flags: .maskCommand) == .begin(currentAppOnly: false, reverse: false),
-              controller.keyAction(keyCode: 49, flags: .maskAlternate) == nil,
+              controller.keyAction(keyCode: 49, flags: .maskCommand) == nil,
               controller.keyAction(keyCode: 53, flags: .maskCommand) == .cancel else { return false }
 
         let custom = KeyboardShortcut(keyCode: 16, modifiers: [.maskControl, .maskAlternate], keyLabel: "Y")
@@ -438,7 +438,7 @@ final class ShortcutController: ObservableObject {
         guard controller.currentAppShortcut == .currentApp, controller.launcherShortcut == .launcher else { return false }
         controller.configure(allWindows: .allWindows, currentApp: .currentApp, launcher: custom)
         guard controller.keyAction(keyCode: 16, flags: custom.modifiers) == .toggleLauncher,
-              controller.keyAction(keyCode: 49, flags: .maskAlternate) == nil else { return false }
+              controller.keyAction(keyCode: 49, flags: .maskCommand) == nil else { return false }
         controller.configure(allWindows: .allWindows, currentApp: .currentApp)
 
         guard let event = NSEvent.keyEvent(with: .keyDown, location: .zero,

@@ -21,7 +21,7 @@
 
 - **Window switching** — Navigate every open window with `⌘Tab`, ordered by recent use.
 - **Instant search** — Find windows by app name or title, with pinyin（拼音）support.
-- **App launcher** — Press `⌥Space` to find and open installed apps.
+- **App launcher** — Press `⌘Space` to find and open installed apps.
 - **Multi-desktop support** — Switch across Spaces and displays.
 - **Fully customizable** — Configure shortcuts, appearance, and window behavior.
 - **Native experience** — Built with Swift and AppKit, with Liquid Glass support on macOS 26.
@@ -41,7 +41,7 @@ Native. Lightweight. Out of your way.
 | ---------------------- | ------------------------------------- |
 | `⌘Tab`                 | Switch between windows                |
 | `⌘` + `` ` ``          | Switch windows within the current app |
-| `⌥Space`               | Open app launcher                     |
+| `⌘Space`               | Open app launcher                     |
 | Type                   | Search windows                        |
 | `Shift` / `↑` / `↓`    | Navigate                              |
 | `↩` / Release modifier | Select window                         |
