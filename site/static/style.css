@@ -287,7 +287,6 @@ h1 {
 }
 .sub { margin: 12px 0 0; font-size: 16px; color: var(--color-neutral-300); }
 .sub-wide { max-width: 52ch; line-height: 1.6; }
-.video-note { font-size: 13px; }
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));

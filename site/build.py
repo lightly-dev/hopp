@@ -212,7 +212,7 @@ All shortcuts are customizable.
 | --- | --- |
 | ⌘Tab | Switch between windows across all apps |
 | ⌘` | Switch windows within the current app |
-| ⌥Space | Open the app launcher |
+| ⌘Space | Open the app launcher |
 | Type | Search by app name or window title, including pinyin |
 | Shift, ↑ or ↓ | Navigate |
 | ↩ or release the modifier | Select the window |

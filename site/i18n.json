@@ -50,7 +50,7 @@
       "sameTitle": "Stay in the same app with ⌘`",
       "sameSub": "Switch between just the windows of the app you're in",
       "sameVideo": "Pressing Command-backtick opens Hopp with two Claude windows listed, and Return brings the other window to the front.",
-      "launchTitle": "…and open any app with ⌥Space",
+      "launchTitle": "…and open any app with ⌘Space",
       "launchSub": "Find and open installed apps, across Spaces and displays",
       "launchVideo": "The Hopp launcher finds and opens Claude, App Store and Google Chrome as their names are typed.",
       "nativeTitle": "Native. Lightweight. Out of your way.",
@@ -91,8 +91,7 @@
         }
       ],
       "metaTitle": "Hopp — Switch windows, mouse-free",
-      "metaDesc": "Hopp is a free, open-source, native window switcher for macOS. See every window with ⌘Tab, search by app name or title, and open any app with ⌥Space.",
-      "launchNote": "The default shortcut is ⌥Space. This demo was recorded with a custom ⌘Space shortcut."
+      "metaDesc": "Hopp is a free, open-source, native window switcher for macOS. See every window with ⌘Tab, search by app name or title, and open any app with ⌘Space."
     },
     "zh": {
       "langLabel": "语言",
@@ -117,7 +116,7 @@
       "sameTitle": "用 ⌘` 在同一应用内切换",
       "sameSub": "只在当前应用的窗口之间切换",
       "sameVideo": "按下 Command-反引号，Hopp 列出两个 Claude 窗口，按回车将另一个窗口切换到最前面。",
-      "launchTitle": "……还能用 ⌥Space 打开任意应用",
+      "launchTitle": "……还能用 ⌘Space 打开任意应用",
       "launchSub": "跨桌面和显示器，查找并打开已安装的应用",
       "launchVideo": "Hopp 启动器随输入查找并打开 Claude、App Store 和 Google Chrome。",
       "nativeTitle": "原生。轻量。不打扰。",
@@ -158,8 +157,7 @@
         }
       ],
       "metaTitle": "Hopp — 切换窗口，无需鼠标",
-      "metaDesc": "Hopp 是一款免费开源的 macOS 原生窗口切换器。用 ⌘Tab 查看每个窗口，按应用名、标题或拼音搜索，用 ⌥Space 打开任意应用。",
-      "launchNote": "默认快捷键是 ⌥Space。此演示录制时使用了自定义的 ⌘Space。"
+      "metaDesc": "Hopp 是一款免费开源的 macOS 原生窗口切换器。用 ⌘Tab 查看每个窗口，按应用名、标题或拼音搜索，用 ⌘Space 打开任意应用。"
     },
     "ja": {
       "langLabel": "言語",
@@ -184,7 +182,7 @@
       "sameTitle": "⌘` で同じアプリの中を切り替え",
       "sameSub": "今使っているアプリのウインドウだけを切り替え",
       "sameVideo": "Command-バッククォートを押すと Hopp に 2 つの Claude ウインドウが表示され、Return でもう一方が前面に移動します。",
-      "launchTitle": "……⌥Space で、どのアプリもすぐに起動",
+      "launchTitle": "……⌘Space で、どのアプリもすぐに起動",
       "launchSub": "操作スペースやディスプレイをまたいで、インストール済みのアプリを検索して起動",
       "launchVideo": "Hopp のランチャーで名前を入力し、Claude、App Store、Google Chrome を検索して起動します。",
       "nativeTitle": "ネイティブ。軽量。邪魔をしない。",
@@ -225,8 +223,7 @@
         }
       ],
       "metaTitle": "Hopp — ウインドウ切替、マウスいらず",
-      "metaDesc": "Hopp は無料でオープンソースの macOS ネイティブ・ウインドウスイッチャーです。⌘Tab ですべてのウインドウを表示し、アプリ名やタイトルで検索、⌥Space でどのアプリもすぐに起動できます。",
-      "launchNote": "デフォルトのショートカットは ⌥Space です。このデモはカスタム設定の ⌘Space で収録しています。"
+      "metaDesc": "Hopp は無料でオープンソースの macOS ネイティブ・ウインドウスイッチャーです。⌘Tab ですべてのウインドウを表示し、アプリ名やタイトルで検索、⌘Space でどのアプリもすぐに起動できます。"
     },
     "es": {
       "langLabel": "Idioma",
@@ -251,7 +248,7 @@
       "sameTitle": "Quédate en la misma app con ⌘`",
       "sameSub": "Cambia solo entre las ventanas de la app en la que estás",
       "sameVideo": "Al pulsar Comando-acento grave, Hopp muestra dos ventanas de Claude, y Retorno trae la otra ventana al frente.",
-      "launchTitle": "…y abre cualquier app con ⌥Espacio",
+      "launchTitle": "…y abre cualquier app con ⌘Espacio",
       "launchSub": "Busca y abre apps instaladas, en cualquier espacio y pantalla",
       "launchVideo": "El lanzador de Hopp busca y abre Claude, App Store y Google Chrome a medida que se escriben sus nombres.",
       "nativeTitle": "Nativa. Ligera. Sin estorbar.",
@@ -292,8 +289,7 @@
         }
       ],
       "metaTitle": "Hopp — Cambia de ventana, sin ratón",
-      "metaDesc": "Hopp es un selector de ventanas nativo, gratuito y de código abierto para macOS. Ve todas las ventanas con ⌘Tab, busca por app o título y abre cualquier app con ⌥Espacio.",
-      "launchNote": "El atajo predeterminado es ⌥Espacio. Esta demostración se grabó con un atajo personalizado, ⌘Espacio."
+      "metaDesc": "Hopp es un selector de ventanas nativo, gratuito y de código abierto para macOS. Ve todas las ventanas con ⌘Tab, busca por app o título y abre cualquier app con ⌘Espacio."
     },
     "fr": {
       "langLabel": "Langue",
@@ -318,7 +314,7 @@
       "sameTitle": "Restez dans la même app avec ⌘`",
       "sameSub": "Passez d’une fenêtre à l’autre, uniquement dans l’app active",
       "sameVideo": "En appuyant sur Commande-accent grave, Hopp affiche deux fenêtres Claude, et Retour met l’autre fenêtre au premier plan.",
-      "launchTitle": "…et ouvrez n’importe quelle app avec ⌥Espace",
+      "launchTitle": "…et ouvrez n’importe quelle app avec ⌘Espace",
       "launchSub": "Trouvez et ouvrez vos apps installées, sur tous vos Spaces et écrans",
       "launchVideo": "Le lanceur de Hopp trouve et ouvre Claude, App Store et Google Chrome au fil de la saisie de leur nom.",
       "nativeTitle": "Natif. Léger. Discret.",
@@ -359,8 +355,7 @@
         }
       ],
       "metaTitle": "Hopp — Changez de fenêtre, sans souris",
-      "metaDesc": "Hopp est un sélecteur de fenêtres natif, gratuit et open source pour macOS. Affichez chaque fenêtre avec ⌘Tab, cherchez par app ou titre et ouvrez n’importe quelle app avec ⌥Espace.",
-      "launchNote": "Le raccourci par défaut est ⌥Espace. Cette démo a été enregistrée avec un raccourci personnalisé, ⌘Espace."
+      "metaDesc": "Hopp est un sélecteur de fenêtres natif, gratuit et open source pour macOS. Affichez chaque fenêtre avec ⌘Tab, cherchez par app ou titre et ouvrez n’importe quelle app avec ⌘Espace."
     }
   }
 }
