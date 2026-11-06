@@ -1,0 +1,366 @@
+{
+  "languages": [
+    {
+      "code": "en",
+      "tag": "en",
+      "label": "English"
+    },
+    {
+      "code": "zh",
+      "tag": "zh-Hans",
+      "label": "简体中文"
+    },
+    {
+      "code": "ja",
+      "tag": "ja",
+      "label": "日本語"
+    },
+    {
+      "code": "es",
+      "tag": "es",
+      "label": "Español"
+    },
+    {
+      "code": "fr",
+      "tag": "fr",
+      "label": "Français"
+    }
+  ],
+  "strings": {
+    "en": {
+      "langLabel": "Language",
+      "toLight": "Switch to light mode",
+      "toDark": "Switch to dark mode",
+      "navFaq": "FAQ",
+      "navReleases": "Releases",
+      "navDownload": "Download",
+      "iconAlt": "Hopp app icon",
+      "heroTitle": "Switch windows, mouse-free.",
+      "heroSub": "A fast, keyboard-first, native window switcher for macOS",
+      "downloadMac": "Download for macOS",
+      "viewGitHub": "View on GitHub",
+      "metaSize": "Under 4 MB",
+      "metaOs": "macOS 13 or later",
+      "metaChips": "Apple silicon and Intel",
+      "allTitle": "Switch between windows across all your apps with ⌘Tab",
+      "allVideo": "Pressing Command-Tab and typing a name switches to Claude, App Store and Calendar; typing the pinyin rili finds Calendar.",
+      "problemTitle": "Stop guessing which window you'll land on:",
+      "problemNote": "The built-in ⌘Tab shows apps. Two Safari windows, one icon.",
+      "better": "…there is a better way:",
+      "sameTitle": "Stay in the same app with ⌘`",
+      "sameSub": "Switch between just the windows of the app you're in",
+      "sameVideo": "Pressing Command-backtick opens Hopp with two Claude windows listed, and Return brings the other window to the front.",
+      "launchTitle": "…and open any app with ⌥Space",
+      "launchSub": "Find and open installed apps, across Spaces and displays",
+      "launchVideo": "The Hopp launcher finds and opens Claude, App Store and Google Chrome as their names are typed.",
+      "nativeTitle": "Native. Lightweight. Out of your way.",
+      "nativeSub": "Built with Swift and AppKit, with Liquid Glass support on macOS 26. No Electron, bundled browser, or background service.",
+      "cardSize": "< 4 MB",
+      "cardInstant": "Instant",
+      "cardInstantSub": "Minimal resource usage",
+      "cardMenu": "Menu bar",
+      "cardMenuSub": "Runs quietly",
+      "cardYours": "Yours",
+      "cardYoursSub": "Shortcuts, appearance, behavior",
+      "faqTitle": "FAQ",
+      "openSource": "Free and open source under Apache-2.0",
+      "faqs": [
+        {
+          "q": "Is Hopp free?",
+          "a": "Yes. Hopp is open source under the Apache License 2.0. Download it from GitHub Releases or build it from source."
+        },
+        {
+          "q": "Which Macs are supported?",
+          "a": "Hopp runs on macOS 13 or later, on both Apple silicon and Intel Macs."
+        },
+        {
+          "q": "Can I search in Chinese?",
+          "a": "Yes. Search matches app names and window titles, and supports pinyin（拼音）, so you can find a Chinese window title by typing its pinyin."
+        },
+        {
+          "q": "Can I change the shortcuts?",
+          "a": "All shortcuts are customizable, along with appearance and window behavior."
+        },
+        {
+          "q": "How do I install it?",
+          "a": "Download the latest version from GitHub Releases, drag Hopp.app into Applications, and grant Accessibility permission when prompted."
+        },
+        {
+          "q": "Does it use Electron?",
+          "a": "No. Hopp is built with Swift and AppKit, with no Electron, bundled browser, or background service. It runs quietly in the menu bar and is under 4 MB."
+        }
+      ],
+      "metaTitle": "Hopp — Switch windows, mouse-free",
+      "metaDesc": "Hopp is a free, open-source, native window switcher for macOS. See every window with ⌘Tab, search by app name or title, and open any app with ⌥Space.",
+      "launchNote": "The default shortcut is ⌥Space. This demo was recorded with a custom ⌘Space shortcut."
+    },
+    "zh": {
+      "langLabel": "语言",
+      "toLight": "切换到浅色模式",
+      "toDark": "切换到深色模式",
+      "navFaq": "常见问题",
+      "navReleases": "版本发布",
+      "navDownload": "下载",
+      "iconAlt": "Hopp 应用图标",
+      "heroTitle": "切换窗口，无需鼠标。",
+      "heroSub": "快速、键盘优先的 macOS 原生窗口切换器",
+      "downloadMac": "下载 macOS 版",
+      "viewGitHub": "在 GitHub 上查看",
+      "metaSize": "小于 4 MB",
+      "metaOs": "macOS 13 或更高版本",
+      "metaChips": "Apple 芯片和 Intel",
+      "allTitle": "用 ⌘Tab 在所有应用的窗口之间切换",
+      "allVideo": "按下 Command-Tab 并输入名称，依次切换到 Claude、App Store 和日历；输入拼音 rili 可以找到日历。",
+      "problemTitle": "别再猜会切到哪个窗口：",
+      "problemNote": "系统自带的 ⌘Tab 只显示应用。两个 Safari 窗口，只有一个图标。",
+      "better": "……其实有更好的办法：",
+      "sameTitle": "用 ⌘` 在同一应用内切换",
+      "sameSub": "只在当前应用的窗口之间切换",
+      "sameVideo": "按下 Command-反引号，Hopp 列出两个 Claude 窗口，按回车将另一个窗口切换到最前面。",
+      "launchTitle": "……还能用 ⌥Space 打开任意应用",
+      "launchSub": "跨桌面和显示器，查找并打开已安装的应用",
+      "launchVideo": "Hopp 启动器随输入查找并打开 Claude、App Store 和 Google Chrome。",
+      "nativeTitle": "原生。轻量。不打扰。",
+      "nativeSub": "使用 Swift 和 AppKit 构建，支持 macOS 26 的 Liquid Glass。没有 Electron、内置浏览器或后台服务。",
+      "cardSize": "< 4 MB",
+      "cardInstant": "即时响应",
+      "cardInstantSub": "资源占用极低",
+      "cardMenu": "菜单栏",
+      "cardMenuSub": "安静运行",
+      "cardYours": "由你定制",
+      "cardYoursSub": "快捷键、外观、行为",
+      "faqTitle": "常见问题",
+      "openSource": "基于 Apache-2.0 协议免费开源",
+      "faqs": [
+        {
+          "q": "Hopp 免费吗？",
+          "a": "免费。Hopp 基于 Apache License 2.0 开源，可以从 GitHub Releases 下载，也可以从源码构建。"
+        },
+        {
+          "q": "支持哪些 Mac？",
+          "a": "Hopp 可在 macOS 13 或更高版本上运行，同时支持 Apple 芯片和 Intel 芯片的 Mac。"
+        },
+        {
+          "q": "可以搜索中文吗？",
+          "a": "可以。搜索会匹配应用名和窗口标题，并支持拼音，输入拼音就能找到中文标题的窗口。"
+        },
+        {
+          "q": "可以修改快捷键吗？",
+          "a": "所有快捷键都可以自定义，外观和窗口行为也可以调整。"
+        },
+        {
+          "q": "如何安装？",
+          "a": "从 GitHub Releases 下载最新版本，把 Hopp.app 拖到“应用程序”文件夹，并在系统提示时授予辅助功能权限。"
+        },
+        {
+          "q": "它使用 Electron 吗？",
+          "a": "不使用。Hopp 使用 Swift 和 AppKit 构建，没有 Electron、内置浏览器或后台服务。它安静地运行在菜单栏中，体积小于 4 MB。"
+        }
+      ],
+      "metaTitle": "Hopp — 切换窗口，无需鼠标",
+      "metaDesc": "Hopp 是一款免费开源的 macOS 原生窗口切换器。用 ⌘Tab 查看每个窗口，按应用名、标题或拼音搜索，用 ⌥Space 打开任意应用。",
+      "launchNote": "默认快捷键是 ⌥Space。此演示录制时使用了自定义的 ⌘Space。"
+    },
+    "ja": {
+      "langLabel": "言語",
+      "toLight": "ライトモードに切り替え",
+      "toDark": "ダークモードに切り替え",
+      "navFaq": "よくある質問",
+      "navReleases": "リリース",
+      "navDownload": "ダウンロード",
+      "iconAlt": "Hopp のアプリアイコン",
+      "heroTitle": "ウインドウ切替、マウスいらず。",
+      "heroSub": "キーボード中心で高速な、macOS ネイティブのウインドウスイッチャー",
+      "downloadMac": "macOS 版をダウンロード",
+      "viewGitHub": "GitHub で見る",
+      "metaSize": "4 MB 未満",
+      "metaOs": "macOS 13 以降",
+      "metaChips": "Apple シリコンと Intel",
+      "allTitle": "⌘Tab で、すべてのアプリのウインドウを切り替え",
+      "allVideo": "Command-Tab を押して名前を入力し、Claude、App Store、カレンダーへ切り替えます。ピンイン rili でカレンダーも見つかります。",
+      "problemTitle": "どのウインドウに移るのか、もう迷わない：",
+      "problemNote": "標準の ⌘Tab が表示するのはアプリだけ。Safari のウインドウが 2 つでも、アイコンは 1 つ。",
+      "better": "……もっといい方法があります：",
+      "sameTitle": "⌘` で同じアプリの中を切り替え",
+      "sameSub": "今使っているアプリのウインドウだけを切り替え",
+      "sameVideo": "Command-バッククォートを押すと Hopp に 2 つの Claude ウインドウが表示され、Return でもう一方が前面に移動します。",
+      "launchTitle": "……⌥Space で、どのアプリもすぐに起動",
+      "launchSub": "操作スペースやディスプレイをまたいで、インストール済みのアプリを検索して起動",
+      "launchVideo": "Hopp のランチャーで名前を入力し、Claude、App Store、Google Chrome を検索して起動します。",
+      "nativeTitle": "ネイティブ。軽量。邪魔をしない。",
+      "nativeSub": "Swift と AppKit で開発し、macOS 26 の Liquid Glass に対応。Electron も、同梱ブラウザも、バックグラウンドサービスもありません。",
+      "cardSize": "< 4 MB",
+      "cardInstant": "瞬時に反応",
+      "cardInstantSub": "リソース消費は最小限",
+      "cardMenu": "メニューバー",
+      "cardMenuSub": "静かに常駐",
+      "cardYours": "自分好みに",
+      "cardYoursSub": "ショートカット、外観、動作",
+      "faqTitle": "よくある質問",
+      "openSource": "Apache-2.0 のもとで無料・オープンソース",
+      "faqs": [
+        {
+          "q": "Hopp は無料ですか？",
+          "a": "はい。Hopp は Apache License 2.0 のオープンソースです。GitHub Releases からダウンロードするか、ソースからビルドできます。"
+        },
+        {
+          "q": "対応している Mac は？",
+          "a": "macOS 13 以降で動作し、Apple シリコンと Intel の両方の Mac に対応しています。"
+        },
+        {
+          "q": "中国語で検索できますか？",
+          "a": "はい。アプリ名とウインドウのタイトルを検索でき、ピンイン（拼音）にも対応しているので、中国語のタイトルもピンインで見つけられます。"
+        },
+        {
+          "q": "ショートカットは変更できますか？",
+          "a": "すべてのショートカットをカスタマイズでき、外観やウインドウの動作も設定できます。"
+        },
+        {
+          "q": "インストール方法は？",
+          "a": "GitHub Releases から最新版をダウンロードし、Hopp.app を「アプリケーション」フォルダにドラッグして、求められたらアクセシビリティを許可してください。"
+        },
+        {
+          "q": "Electron を使っていますか？",
+          "a": "いいえ。Hopp は Swift と AppKit で開発されており、Electron も、同梱ブラウザも、バックグラウンドサービスもありません。メニューバーで静かに動作し、サイズは 4 MB 未満です。"
+        }
+      ],
+      "metaTitle": "Hopp — ウインドウ切替、マウスいらず",
+      "metaDesc": "Hopp は無料でオープンソースの macOS ネイティブ・ウインドウスイッチャーです。⌘Tab ですべてのウインドウを表示し、アプリ名やタイトルで検索、⌥Space でどのアプリもすぐに起動できます。",
+      "launchNote": "デフォルトのショートカットは ⌥Space です。このデモはカスタム設定の ⌘Space で収録しています。"
+    },
+    "es": {
+      "langLabel": "Idioma",
+      "toLight": "Cambiar al modo claro",
+      "toDark": "Cambiar al modo oscuro",
+      "navFaq": "FAQ",
+      "navReleases": "Versiones",
+      "navDownload": "Descargar",
+      "iconAlt": "Icono de la app Hopp",
+      "heroTitle": "Cambia de ventana, sin ratón.",
+      "heroSub": "Un selector de ventanas nativo para macOS, rápido y pensado para el teclado",
+      "downloadMac": "Descargar para macOS",
+      "viewGitHub": "Ver en GitHub",
+      "metaSize": "Menos de 4 MB",
+      "metaOs": "macOS 13 o posterior",
+      "metaChips": "Apple Silicon e Intel",
+      "allTitle": "Cambia entre las ventanas de todas tus apps con ⌘Tab",
+      "allVideo": "Al pulsar Comando-Tab y escribir un nombre se cambia a Claude, App Store y Calendario; escribir el pinyin rili encuentra Calendario.",
+      "problemTitle": "Deja de adivinar a qué ventana vas a ir:",
+      "problemNote": "El ⌘Tab del sistema muestra apps. Dos ventanas de Safari, un solo icono.",
+      "better": "…hay una forma mejor:",
+      "sameTitle": "Quédate en la misma app con ⌘`",
+      "sameSub": "Cambia solo entre las ventanas de la app en la que estás",
+      "sameVideo": "Al pulsar Comando-acento grave, Hopp muestra dos ventanas de Claude, y Retorno trae la otra ventana al frente.",
+      "launchTitle": "…y abre cualquier app con ⌥Espacio",
+      "launchSub": "Busca y abre apps instaladas, en cualquier espacio y pantalla",
+      "launchVideo": "El lanzador de Hopp busca y abre Claude, App Store y Google Chrome a medida que se escriben sus nombres.",
+      "nativeTitle": "Nativa. Ligera. Sin estorbar.",
+      "nativeSub": "Creada con Swift y AppKit, compatible con Liquid Glass en macOS 26. Sin Electron, navegador integrado ni servicio en segundo plano.",
+      "cardSize": "< 4 MB",
+      "cardInstant": "Instantánea",
+      "cardInstantSub": "Uso mínimo de recursos",
+      "cardMenu": "Barra de menús",
+      "cardMenuSub": "Funciona en silencio",
+      "cardYours": "A tu manera",
+      "cardYoursSub": "Atajos, apariencia, comportamiento",
+      "faqTitle": "FAQ",
+      "openSource": "Gratis y de código abierto bajo Apache-2.0",
+      "faqs": [
+        {
+          "q": "¿Hopp es gratis?",
+          "a": "Sí. Hopp es de código abierto bajo la licencia Apache 2.0. Descárgala desde GitHub Releases o compílala desde el código fuente."
+        },
+        {
+          "q": "¿Qué Mac son compatibles?",
+          "a": "Hopp funciona en macOS 13 o posterior, en Mac con Apple Silicon e Intel."
+        },
+        {
+          "q": "¿Puedo buscar en chino?",
+          "a": "Sí. La búsqueda encuentra nombres de apps y títulos de ventanas, y admite pinyin（拼音）, así que puedes encontrar un título en chino escribiendo su pinyin."
+        },
+        {
+          "q": "¿Puedo cambiar los atajos?",
+          "a": "Todos los atajos se pueden personalizar, igual que la apariencia y el comportamiento de las ventanas."
+        },
+        {
+          "q": "¿Cómo se instala?",
+          "a": "Descarga la última versión desde GitHub Releases, arrastra Hopp.app a Aplicaciones y concede el permiso de Accesibilidad cuando se solicite."
+        },
+        {
+          "q": "¿Usa Electron?",
+          "a": "No. Hopp está creada con Swift y AppKit, sin Electron, navegador integrado ni servicio en segundo plano. Funciona en silencio en la barra de menús y ocupa menos de 4 MB."
+        }
+      ],
+      "metaTitle": "Hopp — Cambia de ventana, sin ratón",
+      "metaDesc": "Hopp es un selector de ventanas nativo, gratuito y de código abierto para macOS. Ve todas las ventanas con ⌘Tab, busca por app o título y abre cualquier app con ⌥Espacio.",
+      "launchNote": "El atajo predeterminado es ⌥Espacio. Esta demostración se grabó con un atajo personalizado, ⌘Espacio."
+    },
+    "fr": {
+      "langLabel": "Langue",
+      "toLight": "Passer en mode clair",
+      "toDark": "Passer en mode sombre",
+      "navFaq": "FAQ",
+      "navReleases": "Versions",
+      "navDownload": "Télécharger",
+      "iconAlt": "Icône de l’app Hopp",
+      "heroTitle": "Changez de fenêtre, sans souris.",
+      "heroSub": "Un sélecteur de fenêtres natif pour macOS, rapide et pensé pour le clavier",
+      "downloadMac": "Télécharger pour macOS",
+      "viewGitHub": "Voir sur GitHub",
+      "metaSize": "Moins de 4 Mo",
+      "metaOs": "macOS 13 ou version ultérieure",
+      "metaChips": "Apple Silicon et Intel",
+      "allTitle": "Passez d’une fenêtre à l’autre, dans toutes vos apps, avec ⌘Tab",
+      "allVideo": "En appuyant sur Commande-Tab puis en saisissant un nom, on passe à Claude, App Store et Calendrier ; saisir le pinyin rili trouve Calendrier.",
+      "problemTitle": "Ne devinez plus sur quelle fenêtre vous allez tomber :",
+      "problemNote": "Le ⌘Tab du système affiche des apps. Deux fenêtres Safari, une seule icône.",
+      "better": "…il existe une meilleure solution :",
+      "sameTitle": "Restez dans la même app avec ⌘`",
+      "sameSub": "Passez d’une fenêtre à l’autre, uniquement dans l’app active",
+      "sameVideo": "En appuyant sur Commande-accent grave, Hopp affiche deux fenêtres Claude, et Retour met l’autre fenêtre au premier plan.",
+      "launchTitle": "…et ouvrez n’importe quelle app avec ⌥Espace",
+      "launchSub": "Trouvez et ouvrez vos apps installées, sur tous vos Spaces et écrans",
+      "launchVideo": "Le lanceur de Hopp trouve et ouvre Claude, App Store et Google Chrome au fil de la saisie de leur nom.",
+      "nativeTitle": "Natif. Léger. Discret.",
+      "nativeSub": "Conçu avec Swift et AppKit, compatible Liquid Glass sur macOS 26. Sans Electron, navigateur intégré ni service en arrière-plan.",
+      "cardSize": "< 4 Mo",
+      "cardInstant": "Instantané",
+      "cardInstantSub": "Ressources minimales",
+      "cardMenu": "Barre des menus",
+      "cardMenuSub": "Fonctionne discrètement",
+      "cardYours": "À votre façon",
+      "cardYoursSub": "Raccourcis, apparence, comportement",
+      "faqTitle": "FAQ",
+      "openSource": "Gratuit et open source sous licence Apache-2.0",
+      "faqs": [
+        {
+          "q": "Hopp est-il gratuit ?",
+          "a": "Oui. Hopp est open source sous licence Apache 2.0. Téléchargez-le depuis GitHub Releases ou compilez-le à partir des sources."
+        },
+        {
+          "q": "Quels Mac sont pris en charge ?",
+          "a": "Hopp fonctionne sur macOS 13 ou version ultérieure, sur les Mac Apple Silicon et Intel."
+        },
+        {
+          "q": "Puis-je chercher en chinois ?",
+          "a": "Oui. La recherche porte sur les noms d’apps et les titres de fenêtres, et prend en charge le pinyin（拼音）: vous trouvez un titre en chinois en saisissant son pinyin."
+        },
+        {
+          "q": "Puis-je modifier les raccourcis ?",
+          "a": "Tous les raccourcis sont personnalisables, tout comme l’apparence et le comportement des fenêtres."
+        },
+        {
+          "q": "Comment l’installer ?",
+          "a": "Téléchargez la dernière version depuis GitHub Releases, faites glisser Hopp.app dans Applications et accordez l’autorisation Accessibilité lorsqu’elle est demandée."
+        },
+        {
+          "q": "Utilise-t-il Electron ?",
+          "a": "Non. Hopp est conçu avec Swift et AppKit, sans Electron, navigateur intégré ni service en arrière-plan. Il fonctionne discrètement dans la barre des menus et pèse moins de 4 Mo."
+        }
+      ],
+      "metaTitle": "Hopp — Changez de fenêtre, sans souris",
+      "metaDesc": "Hopp est un sélecteur de fenêtres natif, gratuit et open source pour macOS. Affichez chaque fenêtre avec ⌘Tab, cherchez par app ou titre et ouvrez n’importe quelle app avec ⌥Espace.",
+      "launchNote": "Le raccourci par défaut est ⌥Espace. Cette démo a été enregistrée avec un raccourci personnalisé, ⌘Espace."
+    }
+  }
+}
